@@ -1,0 +1,69 @@
+[
+    {
+        "id": 1,
+        "name": "+51 921 876 815 (Tú)",
+        "status": "Pan, pollo, pan",
+        "image": "img/perfil1.jpg"
+    },
+    {
+        "id": 2,
+        "name": "Sheyla Rosa",
+        "status": "Hola, como estas?",
+        "image": "img/perfil2.jpg"
+    },
+    {
+        "id": 3,
+        "name": "Juan Pedro",
+        "status": "Te elimino!",
+        "image": "img/perfil3.jpg"
+    },
+    {
+        "id": 4,
+        "name": "Tote Cornelio",
+        "status": "Escribiendo...",
+        "image": "img/perfil4.jpg"
+
+    },
+    {
+        "id": 5,
+        "name": "Maria Madeley",
+        "status": "Te elimino!",
+        "image": "img/perfil5.jpg"
+
+    },
+    {
+        "id": 6,
+        "name": "Juan Pedro",
+        "status": "Que haces negro",
+        "image": "img/perfil6.jpg"
+
+    },
+    {
+        "id": 7,
+        "name": "Cristian Dominguez",
+        "status": "Pasa la pension",
+        "image": "img/perfil7.jpg"
+
+    },
+    {
+        "id": 8,
+        "name": "Juan Pedro",
+        "status": "Te elimino!",
+        "image": "img/perfil8.jpg"
+
+    },
+    {
+        "id": 9,
+        "name": "Marisol Cabero",
+        "status": "K hcs papu!!",
+        "image": "img/perfil9.jpg"
+
+    },
+    {
+        "id": 10,
+        "name": "Andres Martines",
+        "status": "Holi",
+        "image": "img/perfil10.jpg"
+
+    }
+]

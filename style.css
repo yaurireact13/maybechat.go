@@ -1,0 +1,571 @@
+:root {
+    /* Colores para el modo oscuro */
+    --primary-bg-color: #2a2f32;
+    --sidebar-bg-color: #131c21;
+    --contact-bg-color: #202c33;
+    --active-contact-color: #005c4b;
+    --chat-bg-color: #0a1014;
+    --sent-msg-color: #056162;
+    --received-msg-color: #ffffff;
+    --text-color: #e9edef;
+    --secondary-text-color: #8696a0;
+    --input-bg-color: #323739;
+    --accent-color: #25d366;
+}
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: var(--primary-bg-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Fondo de patrón para el chat */
+.chat-window {
+    background: url('img/backcat.jpg') no-repeat center center;
+    background-size: cover;
+}
+
+/* Estilo general del contenedor de la aplicación */
+.app-container {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    height: 90vh;
+    background-color: var(--sidebar-bg-color);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Encabezado del chat con icono y título */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: var(--contact-bg-color);
+    color: var(--text-color);
+}
+
+.sidebar-header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.sidebar-header h1 {
+    font-size: 1.5rem;
+    color: var(--text-color);
+}
+
+/* Búsqueda */
+.search-box {
+    padding: 10px;
+    background-color: var(--input-bg-color);
+    border-bottom: 1px solid var(--icon-color);
+}
+
+.search-box input {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 20px;
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+/* Lista de Contactos */
+.chat-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: var(--sidebar-bg-color);
+    max-height: 70vh;      
+    padding-right: 5px; 
+
+}
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; 
+}
+
+
+.chat {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--icon-color);
+    transition: background-color 0.3s;
+    color: var(--secondary-text-color);
+}
+
+.chat:hover {
+    background-color: var(--active-contact-color);
+}
+
+.contact-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.chat-info h2 {
+    margin: 0;
+    font-size: 1em;
+    color: var(--text-color);
+}
+
+.chat-info p {
+    margin: 5px 0 0;
+    font-size: 0.9em;
+    color: var(--secondary-text-color);
+}
+
+
+/* Encabezado de la barra lateral */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: var(--contact-bg-color);
+    color: var(--text-color);
+}
+
+.sidebar-header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.sidebar-header h1 {
+    font-size: 1.5rem;
+    color: var(--text-color);
+}
+
+/* Búsqueda de contactos */
+.search-box {
+    padding: 10px;
+    background-color: var(--input-bg-color);
+    border-bottom: 1px solid var(--icon-color);
+}
+
+.search-box input {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 20px;
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+    font-size: 1rem;
+    outline: none;
+}
+
+/* Botones de filtro */
+.filter-buttons {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    background-color: var(--sidebar-bg-color);
+    border-bottom: 1px solid var(--icon-color);
+}
+
+.filter-button {
+    background: none;
+    border: none;
+    color: var(--secondary-text-color);
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.filter-button:hover,
+.filter-button.active {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+/* Lista de contactos */
+.chat-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: var(--sidebar-bg-color);
+}
+
+.chat {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--icon-color);
+    transition: background-color 0.3s;
+    color: var(--secondary-text-color);
+}
+
+.chat:hover {
+    background-color: var(--active-contact-color);
+}
+
+.contact-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.chat-info h2 {
+    margin: 0;
+    font-size: 1em;
+    color: var(--text-color);
+}
+
+.chat-info p {
+    margin: 5px 0 0;
+    font-size: 0.9em;
+    color: var(--secondary-text-color);
+}
+
+
+/* Fondo de la ventana de chat con patrón */
+.chat-window {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--chat-bg-color);
+    background: url('img/backcat.jpg') no-repeat center center; /* Cambia 'pattern.png' por la imagen que tengas */
+    background-size: cover;
+}
+
+/* Encabezado del chat */
+.chat-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: var(--contact-bg-color);
+    border-bottom: 1px solid var(--icon-color);
+    color: var(--text-color);
+}
+
+.chat-header .contact-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.chat-header .contact-info h2 {
+    margin: 0;
+    font-size: 1.2em;
+    color: var(--text-color);
+}
+
+.chat-header .contact-info p {
+    margin: 5px 0 0;
+    font-size: 0.9em;
+    color: var(--secondary-text-color);
+}
+
+.header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+.header-actions button {
+    background-color: var(--accent-color);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.header-actions button:hover {
+    background-color: darken(var(--accent-color), 10%);
+}
+
+/* Cuerpo del chat */
+.chat-body {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Burbujas de mensajes */
+.message {
+    max-width: 60%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 10px;
+    position: relative;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--text-color);
+}
+
+.message p {
+    margin: 0;
+}
+
+.sent {
+    align-self: flex-end;
+    background-color: var(--sent-msg-color);
+    text-align: right;
+    color: var(--text-color);
+    margin-left: auto;
+}
+
+.received {
+    align-self: flex-start;
+    background-color: var(--received-msg-color);
+    text-align: left;
+    color: #333;
+    margin-right: auto;
+}
+
+/* Estilo de la hora en los mensajes */
+.message .time {
+    display: block;
+    font-size: 0.8em;
+    color: var(--secondary-text-color);
+    margin-top: 5px;
+    text-align: right;
+}
+
+/* Pie de chat */
+.chat-footer {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: var(--input-bg-color);
+    border-top: 1px solid var(--icon-color);
+}
+
+.chat-footer input {
+    flex-grow: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 20px;
+    background-color: #fff;
+    color: #333;
+    font-size: 1rem;
+    margin-right: 10px;
+    outline: none;
+}
+
+.chat-footer button {
+    padding: 10px;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.chat-footer button:hover {
+    background-color: darken(var(--accent-color), 10%);
+}
+
+
+/* Animación de deslizamiento */
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Aplicar la animación a los mensajes */
+.message.sent {
+    animation: slideInFromRight 0.3s ease-out;
+}
+
+.message.received {
+    animation: slideInFromLeft 0.3s ease-out;
+}
+
+/* Indicador de mensajes no leídos */
+.chat.new-message::after {
+    content: '•';
+    color: var(--accent-color);
+    font-size: 1.2rem;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+#loading-spinner {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#page-title{
+    cursor: pointer;
+}
+
+
+/* Estilo del propio spinner */
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 8px solid rgba(255, 255, 255, 0.3);
+    border-top: 8px solid #3498db; /* Cambia a tu color preferido */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Indicador de mensaje no leído con número */
+.unread-indicator {
+    width: 18px;
+    height: 18px;
+    background-color: #00c853; /* Verde brillante para mejor visibilidad */
+    color: #ffffff;
+    border-radius: 50%;
+    display: inline-block;
+    text-align: center;
+    line-height: 18px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+/* Indicador de contacto favorito */
+.favorite-indicator {
+    color: gold; /* Color dorado para el icono de favorito */
+    font-size: 0.9rem;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Estilo general para cada contacto en la lista */
+.chat {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s;
+}
+
+.chat:hover {
+    background-color: #a3a3a3a9;
+}
+
+.contact-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+
+/* Estilos para la barra lateral de detalles del contacto */
+.contact-details-sidebar {
+    width: 0;
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    background-color: #1e282c;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 20px;
+    color: #fff;
+    display: none;
+    box-shadow: -2px 0px 5px rgba(0,0,0,0.5);
+}
+
+.contact-details-sidebar.active {
+    width: 300px;
+    display: block;
+}
+/* Animación de deslizamiento para el panel de detalles del contacto */
+.chat {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* Animación de resaltado para el contacto seleccionado */
+.chat.selected {
+    background-color: #68d7e6a1;
+}
+.close-sidebar-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+}
+
+.details-contact-pic {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 20px auto;
+    display: block;
+}
+
+.details-contact-status, .details-contact-extra {
+    text-align: center;
+    font-size: 14px;
+    color: #b3b3b3;
+    margin: 5px 0;
+}
+
+.details-contact-info, .details-contact-attachments {
+    padding: 20px;
+}
+
+.details-contact-attachments .attachment {
+    background: #3b3e43;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    color: #fff;
+}
+

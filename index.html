@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaybeChat</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="img/sinfondo-maybe.png" type="image">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar con la lista de contactos -->
+        <div class="sidebar">
+            <!-- Encabezado de la barra lateral -->
+            <div class="sidebar-header">
+                <img src="img/sinfondo-maybe.png" alt="MaybeChat Icon" class="profile-pic" title="maybe_logo">
+                <h1 id="page-title">MaybeChat</h1>
+            </div>
+
+            <!-- Cuadro de búsqueda (Fijo) -->
+            <div class="search-box">
+                <input type="text" placeholder="Buscar o empezar un nuevo chat" id="search-input">
+            </div>
+
+            <!-- Botones de filtro de contactos (Fijo) -->
+            <div class="filter-buttons">
+                <button class="filter-button active">Todos</button>
+                <button class="filter-button">No leídos</button>
+                <button class="filter-button">Favoritos</button>
+                <button class="filter-button">Grupos</button>
+            </div>
+
+            <!-- Contenedor de la lista de contactos con scroll -->
+            <div class="chat-list" id="chat-list">
+                <!-- Los contactos se generarán dinámicamente aquí con JavaScript -->
+            </div>
+
+            <!-- Botón para agregar contactos -->
+            <button id="add-contact-button"><i class="fas fa-user-plus"></i></button>
+        </div>
+
+        <!-- Ventana de chat principal -->
+        <div class="chat-window">
+            <!-- Encabezado de la ventana de chat -->
+            <div class="chat-header">
+                <img src="img/perfil1.jpg" alt="Contact" class="contact-pic" id="chat-header-pic">
+                <div class="contact-info">
+                    <h2 id="chat-header-name">+51 921 876 815 (Tú)</h2>
+                    <p>En línea 🟢</p>
+                </div>
+                <div class="header-actions">
+                    <button id="logout-button"><b>Cerrar Sesión</b></button>
+                    <i class="fas fa-ellipsis-v" id="options-icon"></i>
+                </div>
+            </div>
+            
+            <!-- Cuerpo del chat donde se mostrarán los mensajes -->
+            <div class="chat-body" id="chat-body">
+                <!-- Los mensajes se cargarán dinámicamente aquí -->
+            </div>
+
+            <!-- Pie de la ventana de chat para enviar mensajes -->
+            <div class="chat-footer">
+                <input type="text" placeholder="Escribe un mensaje" id="message-input">
+                <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <!-- Nueva sección de información del contacto -->
+        <div class="contact-details-sidebar" id="contact-details-sidebar">
+            <button class="close-sidebar-button" onclick="closeContactDetails()">X</button>
+            <img src="img/perfil1.jpg" alt="Contact" class="details-contact-pic" id="details-contact-pic">
+            <h2 id="details-contact-name">Nombre del Contacto</h2>
+            <p class="details-contact-status">Estado del Contacto</p>
+            <p class="details-contact-extra">~Programador Senior Yauri</p>
+            
+            <div class="details-contact-info">
+                <h3>Info.</h3>
+                <p>Hola soy Yauri Fullstack</p>
+            </div>
+
+            <div class="details-contact-attachments">
+                <h3>Archivos, enlaces y documentos</h3>
+                <!-- Aquí puedes añadir miniaturas de archivos o enlaces relevantes -->
+                <div class="attachment">Archivo 1</div>
+                <div class="attachment">Archivo 2</div>
+                <!-- Más archivos -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Spinner de carga -->
+    <div id="loading-spinner" class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Archivos JavaScript -->
+    <script src="script.js" defer></script>
+    <script src="unread.js"></script>
+    <script src="loadContacts.js"></script>
+    <script src="messageHandler.js" defer></script>
+    <script src="lateral.js"></script>
+</body>
+</html>
