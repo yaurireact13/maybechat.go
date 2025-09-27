@@ -54,14 +54,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Configuración de la gestión de contactos
     function setupContactManagement() {
-        document.getElementById('add-contact-button').addEventListener('click', () => {
-            const name = prompt('Ingrese el nombre del nuevo contacto:');
-            const image = prompt('Ingrese la URL de la imagen del nuevo contacto:');
-            if (name && image) {
-                addContact(name, image);
-            } else {
-                alert('Por favor, ingrese el nombre y la URL de la imagen del nuevo contacto.');
+        const modal = document.getElementById('add-contact-modal');
+        const addButton = document.getElementById('add-contact-button');
+        const closeButton = document.querySelector('.modal .close-button');
+        const form = document.getElementById('add-contact-form');
+
+        // Abrir el modal
+        addButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        // Cerrar el modal con el botón 'X'
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        // Cerrar el modal al hacer clic fuera de él
+        window.addEventListener('click', event => {
+            if (event.target == modal) {
+                modal.style.display = 'none';
             }
+        });
+
+        // Manejar el envío del formulario del modal
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+            const name = document.getElementById('contact-name').value;
+            const phone = document.getElementById('contact-phone').value;
+            let image = document.getElementById('contact-img').value;
+
+            if (!image) {
+                image = 'img/contactundefined.jpg'; // Imagen por defecto
+            }
+
+            addContact(name, phone, image);
+            
+            modal.style.display = 'none';
+            form.reset();
         });
 
         document.addEventListener('click', event => {
@@ -74,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Agregar un nuevo contacto
-    function addContact(name, image) {
+    function addContact(name, phone, image) {
         const newContact = document.createElement('div');
         newContact.classList.add('chat');
         newContact.dataset.contact = chatList.children.length + 1;
@@ -82,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <img src="${image}" alt="Contact" class="contact-pic">
             <div class="chat-info">
                 <h2>${name}</h2>
-                <p>Último mensaje...</p>
+                <p>${phone}</p>
             </div>
             <div class="action-icons">
                 <i class="fas fa-trash-alt delete-contact"></i>
@@ -130,19 +159,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Simulación de mensajes
+    // Simulación de mensajes iniciales
     function simulateMessages(contactName) {
         const messages = [
             { sender: contactName, text: 'Hola, ¿cómo estás?' },
-            { sender: 'Tú', text: `Hola, me llamo ${contactName}.` },
-            { sender: contactName, text: '¿Qué tal tu día?' }
         ];
-
         messages.forEach(message => appendMessage(message.sender, message.text));
     }
 
-    // Crear y añadir un mensaje al chat
-    function appendMessage(sender, text) {
+    // Crear y añadir un mensaje al chat (versión con IA)
+    async function appendMessage(sender, text) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', sender === 'Tú' ? 'sent' : 'received');
         messageDiv.innerHTML = `
@@ -152,15 +178,21 @@ document.addEventListener("DOMContentLoaded", () => {
         chatBody.appendChild(messageDiv);
         chatBody.scrollTop = chatBody.scrollHeight;
 
+        // Si el mensaje es del usuario, busca una respuesta de la IA
         if (sender === 'Tú' && !responseSent) {
+            responseSent = true; // Bloquea para evitar respuestas múltiples
             showTypingStatus();
-            setTimeout(() => {
+            try {
+                const responseText = await getAIResponse(text);
                 const typingStatus = document.getElementById('typing-status');
                 if (typingStatus) typingStatus.remove();
-                const responseText = generateResponse();
-                appendMessage('Contacto', responseText);
-                responseSent = true;
-            }, 2000);
+                await appendMessage('Contacto', responseText);
+            } catch (error) {
+                console.error("Error al obtener respuesta de la IA:", error);
+                const typingStatus = document.getElementById('typing-status');
+                if (typingStatus) typingStatus.remove();
+                await appendMessage('Contacto', 'Lo siento, no puedo responder en este momento.');
+            }
         }
     }
 
@@ -168,23 +200,33 @@ document.addEventListener("DOMContentLoaded", () => {
     function showTypingStatus() {
         const typingDiv = document.createElement('div');
         typingDiv.classList.add('message', 'received');
-        typingDiv.innerHTML = `<p><em>Escribiendo...</em></p>`;
         typingDiv.id = 'typing-status';
+        typingDiv.innerHTML = `<p><em>Escribiendo...</em></p>`;
         chatBody.appendChild(typingDiv);
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    // Genera una respuesta automática aleatoria
-    function generateResponse() {
-        const responses = [
-            'Gracias por tu mensaje. Estoy ocupado en este momento. Te responderé pronto.',
-            '¡Hola! ¿En qué puedo ayudarte?',
-            'Estoy aquí para responder cualquier consulta.',
-            'Déjame revisar eso y te doy una respuesta.',
-            'Interesante, cuéntame más sobre eso.',
-            'Voy a verificarlo, un momento por favor.'
-        ];
-        return responses[Math.floor(Math.random() * responses.length)];
+    // Nueva función para obtener respuesta de la IA desde el backend
+    async function getAIResponse(message) {
+        try {
+            const response = await fetch('http://localhost:3000/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            if (!response.ok) {
+                throw new Error('La respuesta de la red no fue correcta');
+            }
+
+            const data = await response.json();
+            return data.reply;
+        } catch (error) {
+            console.error('Error en getAIResponse:', error);
+            return 'Error al conectar con la IA.';
+        }
     }
 
     // Enviar un mensaje
@@ -192,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const messageText = inputField.value.trim();
         if (messageText !== '') {
             appendMessage('Tú', messageText);
-            responseSent = false;
+            responseSent = false; // Resetea para permitir la siguiente respuesta
             inputField.value = '';
         }
     }
@@ -248,7 +290,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Limpieza del chat
     function setupClearChat() {
-        optionsIcon.addEventListener('click', () => {
+        const clearChatButton = document.getElementById('clear-chat-button');
+        clearChatButton.addEventListener('click', () => {
             if (confirm('¿Estás seguro de que deseas borrar este chat?')) {
                 chatBody.innerHTML = '';
             }

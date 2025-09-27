@@ -16,6 +16,7 @@
             <div class="sidebar-header">
                 <img src="img/sinfondo-maybe.png" alt="MaybeChat Icon" class="profile-pic" title="maybe_logo">
                 <h1 id="page-title">MaybeChat</h1>
+                <button id="add-contact-button"><i class="fas fa-user-plus"></i></button>
             </div>
 
             <!-- Cuadro de búsqueda (Fijo) -->
@@ -36,8 +37,6 @@
                 <!-- Los contactos se generarán dinámicamente aquí con JavaScript -->
             </div>
 
-            <!-- Botón para agregar contactos -->
-            <button id="add-contact-button"><i class="fas fa-user-plus"></i></button>
         </div>
 
         <!-- Ventana de chat principal -->
@@ -51,7 +50,8 @@
                 </div>
                 <div class="header-actions">
                     <button id="logout-button"><b>Cerrar Sesión</b></button>
-                    <i class="fas fa-ellipsis-v" id="options-icon"></i>
+                    <button id="clear-chat-button" title="Borrar chat"><i class="fas fa-trash-alt"></i></button>
+                    <i class="fas fa-ellipsis-v" id="options-icon" style="display: none;"></i> <!-- Ocultamos el ícono anterior -->
                 </div>
             </div>
             
@@ -93,6 +93,23 @@
     <!-- Spinner de carga -->
     <div id="loading-spinner" class="loading-spinner">
         <div class="spinner"></div>
+    </div>
+
+    <!-- Modal para agregar contacto -->
+    <div id="add-contact-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Añadir Nuevo Contacto</h2>
+            <form id="add-contact-form">
+                <label for="contact-name">Nombre:</label>
+                <input type="text" id="contact-name" required>
+                <label for="contact-phone">Teléfono:</label>
+                <input type="text" id="contact-phone" required>
+                <label for="contact-img">URL de la imagen:</label>
+                <input type="text" id="contact-img">
+                <button type="submit">Guardar Contacto</button>
+            </form>
+        </div>
     </div>
 
     <!-- Archivos JavaScript -->

@@ -10,8 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
             { id: 3, name: "Juan Pedro", image: "img/perfil3.jpg", status: "Te elimino!", unread: false, unreadCount: 0, favorite: true, group: false },
             { id: 4, name: "Tote Cornelio", image: "img/perfil4.jpg", status: "Escribiendo...", unread: true, unreadCount: 5, favorite: false, group: false },
             { id: 5, name: "Juandavid Madeley", image: "img/perfil5.jpg", status: "¿Qué haces?", unread: true, unreadCount: 1, favorite: true, group: false },
-            { id: 6, name: "Grupo de Amigos", image: "img/grupo1.png", status: "Último mensaje del grupo", unread: false, unreadCount: 0, favorite: false, group: true },
-            { id: 7, name: "Trabajo en equipo", image: "img/grupo2.png", status: "Conversación activa", unread: false, unreadCount: 0, favorite: false, group: true }
+            { id: 6, name: "Grupo de Amigos", image: "img/grupo1.png", status: "Último mensaje del grupo", unread: false, unreadCount: 0, favorite: false, group: true }
         ];
         
 

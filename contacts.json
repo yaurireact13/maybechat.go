@@ -37,33 +37,5 @@
         "status": "Que haces negro",
         "image": "img/perfil6.jpg"
 
-    },
-    {
-        "id": 7,
-        "name": "Cristian Dominguez",
-        "status": "Pasa la pension",
-        "image": "img/perfil7.jpg"
-
-    },
-    {
-        "id": 8,
-        "name": "Juan Pedro",
-        "status": "Te elimino!",
-        "image": "img/perfil8.jpg"
-
-    },
-    {
-        "id": 9,
-        "name": "Marisol Cabero",
-        "status": "K hcs papu!!",
-        "image": "img/perfil9.jpg"
-
-    },
-    {
-        "id": 10,
-        "name": "Andres Martines",
-        "status": "Holi",
-        "image": "img/perfil10.jpg"
-
     }
 ]

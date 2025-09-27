@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "lateral.js",
   "scripts": {
+    "start:server": "cd miServidor && node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
