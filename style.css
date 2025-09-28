@@ -479,8 +479,6 @@ body {
     line-height: 18px;
     font-size: 0.75rem;
     font-weight: bold;
-    margin-left: 8px;
-    vertical-align: middle;
 }
 /* Indicador de contacto favorito */
 .favorite-indicator {
@@ -511,72 +509,6 @@ body {
     margin-right: 10px;
 }
 
-
-/* Estilos para la barra lateral de detalles del contacto */
-.contact-details-sidebar {
-    width: 0;
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100%;
-    background-color: #1e282c;
-    overflow-x: hidden;
-    transition: 0.5s;
-    padding-top: 20px;
-    color: #fff;
-    display: none;
-    box-shadow: -2px 0px 5px rgba(0,0,0,0.5);
-}
-
-.contact-details-sidebar.active {
-    width: 300px;
-    display: block;
-}
-/* Animación de deslizamiento para el panel de detalles del contacto */
-.chat {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-.close-sidebar-button {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 24px;
-    background: none;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-}
-
-.details-contact-pic {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    margin: 20px auto;
-    display: block;
-}
-
-.details-contact-status, .details-contact-extra {
-    text-align: center;
-    font-size: 14px;
-    color: #b3b3b3;
-    margin: 5px 0;
-}
-
-.details-contact-info, .details-contact-attachments {
-    padding: 20px;
-}
-
-.details-contact-attachments .attachment {
-    background: #3b3e43;
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 5px;
-    color: #fff;
-}
 
 /* Estilos para el modal */
 .modal {
@@ -640,5 +572,82 @@ body {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+}
+
+/* Estilos para los íconos de acción en la lista de chats */
+.chat .action-icons {
+    display: flex;
+    align-items: center;
+    margin-left: auto; /* Empuja los íconos al extremo derecho */
+    opacity: 0; /* Ocultos por defecto */
+    transition: opacity 0.3s ease;
+}
+
+.chat:hover .action-icons {
+    opacity: 1; /* Visibles al pasar el mouse */
+}
+
+.action-icons i {
+    color: var(--secondary-text-color);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 8px; /* Espacio entre íconos */
+    transition: color 0.3s ease;
+}
+
+.action-icons i:hover {
+    color: var(--text-color); /* Color más brillante al pasar el mouse sobre el ícono */
+}
+
+/* Ajuste para que el nombre y estado no se superpongan */
+.chat .chat-info {
+    flex-grow: 1;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.chat .chat-info h2,
+.chat .chat-info p {
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.chat-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: auto;
+    padding-left: 10px;
+}
+
+.unread-indicator {
+    background-color: var(--accent-color);
+    color: var(--sidebar-bg-color);
+    font-size: 0.75rem;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+.favorite-indicator {
+    color: gold;
+    font-size: 1rem;
+}
+
+/* Ocultar los íconos de acción por defecto */
+.action-icons {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Mostrar íconos de acción al pasar el mouse sobre el chat */
+.chat:hover .action-icons {
+    opacity: 1;
 }
 
