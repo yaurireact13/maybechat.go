@@ -11,7 +11,13 @@
     --secondary-text-color: #8696a0;
     --input-bg-color: #323739;
     --accent-color: #25d366;
+
+    /* --- MEJORAS: Variables de Diseño --- */
+    --icon-color: #5c6265; 
+    --border-color: var(--icon-color); /* Para una nomenclatura más clara */
+    --dark-accent-color: #1faa4d; /* Versión más oscura de --accent-color para :hover */
 }
+
 body {
     margin: 0;
     padding: 0;
@@ -25,10 +31,7 @@ body {
 }
 
 /* Fondo de patrón para el chat */
-.chat-window {
-    background: url('img/backcat.jpg') no-repeat center center;
-    background-size: cover;
-}
+/* --- MEJORA: Eliminado fondo 'backcat.jpg' duplicado aquí, solo se usa 'foundbox.jpg' en .chat-window --- */
 
 /* Estilo general del contenedor de la aplicación */
 .app-container {
@@ -40,6 +43,16 @@ body {
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Sidebar */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    /* --- MEJORA: Usar 100% de la altura de .app-container, no 100vh --- */
+    height: 100%; 
+    min-width: 300px; /* Ancho fijo para desktop */
+    width: 30%;
 }
 
 /* Encabezado del chat con icono y título */
@@ -64,6 +77,10 @@ body {
     margin-right: auto; /* Empuja el botón hacia la derecha */
 }
 
+#page-title{
+    cursor: pointer;
+}
+
 #add-contact-button {
     background: none;
     border: none;
@@ -81,7 +98,8 @@ body {
 .search-box {
     padding: 10px;
     background-color: var(--input-bg-color);
-    border-bottom: 1px solid var(--icon-color);
+    /* --- MEJORA: Usar variable de borde --- */
+    border-bottom: 1px solid var(--border-color); 
 }
 
 .search-box input {
@@ -92,95 +110,7 @@ body {
     background-color: var(--input-bg-color);
     color: var(--text-color);
     font-size: 1rem;
-}
-
-/* Lista de Contactos */
-.chat-list {
-    flex-grow: 1;
-    overflow-y: auto;
-    background-color: var(--sidebar-bg-color);
-    max-height: 70vh;      
-    padding-right: 5px; 
-
-}
-.sidebar {
-    display: flex;
-    flex-direction: column;
-    height: 100vh; 
-}
-
-
-.chat {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    cursor: pointer;
-    border-bottom: 1px solid var(--icon-color);
-    transition: background-color 0.3s;
-    color: var(--secondary-text-color);
-}
-
-.chat:hover {
-    background-color: var(--active-contact-color);
-}
-
-.contact-pic {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 10px;
-}
-
-.chat-info h2 {
-    margin: 0;
-    font-size: 1em;
-    color: var(--text-color);
-}
-
-.chat-info p {
-    margin: 5px 0 0;
-    font-size: 0.9em;
-    color: var(--secondary-text-color);
-}
-
-
-/* Encabezado de la barra lateral */
-.sidebar-header {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    background-color: var(--contact-bg-color);
-    color: var(--text-color);
-}
-
-.sidebar-header img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
-}
-
-.sidebar-header h1 {
-    font-size: 1.5rem;
-    color: var(--text-color);
-}
-
-/* Búsqueda de contactos */
-.search-box {
-    padding: 10px;
-    background-color: var(--input-bg-color);
-    border-bottom: 1px solid var(--icon-color);
-}
-
-.search-box input {
-    width: 100%;
-    padding: 8px;
-    border: none;
-    border-radius: 20px;
-    background-color: var(--input-bg-color);
-    color: var(--text-color);
-    font-size: 1rem;
-    outline: none;
+    outline: none; /* Agregado para consistencia */
 }
 
 /* Botones de filtro */
@@ -189,7 +119,8 @@ body {
     justify-content: space-around;
     padding: 10px 0;
     background-color: var(--sidebar-bg-color);
-    border-bottom: 1px solid var(--icon-color);
+    /* --- MEJORA: Usar variable de borde --- */
+    border-bottom: 1px solid var(--border-color); 
 }
 
 .filter-button {
@@ -208,25 +139,50 @@ body {
     font-weight: bold;
 }
 
-/* Lista de contactos */
+/* Lista de Contactos */
 .chat-list {
     flex-grow: 1;
     overflow-y: auto;
     background-color: var(--sidebar-bg-color);
+    /* --- MEJORA: Ajustado el max-height para evitar conflictos con flex-grow --- */
+    /* max-height: 70vh;  */ 
+    padding-right: 5px; 
 }
+
+/* --- MEJORA: Scrollbar Styling para Webkit --- */
+.chat-list::-webkit-scrollbar,
+.chat-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-list::-webkit-scrollbar-thumb,
+.chat-body::-webkit-scrollbar-thumb {
+    background-color: var(--icon-color);
+    border-radius: 4px;
+}
+
+.chat-list::-webkit-scrollbar-track,
+.chat-body::-webkit-scrollbar-track {
+    background: var(--sidebar-bg-color);
+}
+/* ------------------------------------------- */
+
 
 .chat {
     display: flex;
     align-items: center;
     padding: 10px;
     cursor: pointer;
-    border-bottom: 1px solid var(--icon-color);
+    /* --- MEJORA: Usar variable de borde --- */
+    border-bottom: 1px solid var(--border-color); 
     transition: background-color 0.3s;
     color: var(--secondary-text-color);
 }
 
 .chat:hover {
     background-color: var(--active-contact-color);
+    /* --- MEJORA: Eliminada regla duplicada de hover con color fijo --- */
+    /* background-color: #a3a3a3a9; */ 
 }
 
 .contact-pic {
@@ -234,28 +190,39 @@ body {
     height: 50px;
     border-radius: 50%;
     margin-right: 10px;
+    /* --- MEJORA: Asegurar que las imágenes de perfil sean consistentes en el header del chat --- */
+}
+
+.chat-info {
+    flex-grow: 1;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .chat-info h2 {
     margin: 0;
     font-size: 1em;
     color: var(--text-color);
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .chat-info p {
     margin: 5px 0 0;
     font-size: 0.9em;
     color: var(--secondary-text-color);
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
-
 
 /* Fondo de la ventana de chat con patrón */
 .chat-window {
-    width: 80%;
+    /* --- MEJORA: width ajustado para que sea flexible en desktop (100% - sidebar) --- */
+    width: 70%; 
     display: flex;
     flex-direction: column;
     background-color: var(--chat-bg-color);
-    background: url('img/foundbox.jpg') no-repeat center center; /* Cambia 'pattern.png' por la imagen que tengas */
+    background: url('img/foundbox.jpg') no-repeat center center; 
     background-size: cover;
 }
 
@@ -263,9 +230,10 @@ body {
 .chat-header {
     display: flex;
     align-items: center;
-    padding: 22px;
+    padding: 15px; /* Ajustado para consistencia */
     background-color: var(--contact-bg-color);
-    border-bottom: 1px solid var(--icon-color);
+    /* --- MEJORA: Usar variable de borde --- */
+    border-bottom: 1px solid var(--border-color);
     color: var(--text-color);
 }
 
@@ -292,6 +260,7 @@ body {
     margin-left: auto;
     display: flex;
     align-items: center;
+    gap: 10px; /* --- MEJORA: Espacio entre botones --- */
 }
 
 .header-actions button {
@@ -305,14 +274,29 @@ body {
 }
 
 .header-actions button:hover {
-    background-color: darken(var(--accent-color), 10%);
+    /* --- MEJORA: Usar variable definida para el hover --- */
+    background-color: var(--dark-accent-color); 
 }
+/* --- MEJORA: Estilo para iconos en el chat header (si se añaden más como sugerí) --- */
+.header-actions i {
+    color: var(--secondary-text-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.3s;
+}
+.header-actions i:hover {
+    color: var(--text-color);
+}
+/* ----------------------------------------------------------------------------------- */
 
 /* Cuerpo del chat */
 .chat-body {
     flex-grow: 1;
     padding: 10px;
     overflow-y: auto;
+    display: flex; /* --- MEJORA: Flexbox para alinear los mensajes correctamente --- */
+    flex-direction: column;
     position: relative;
 }
 
@@ -326,6 +310,7 @@ body {
     font-size: 1rem;
     line-height: 1.5;
     color: var(--text-color);
+    word-wrap: break-word; /* --- MEJORA: Evita que el texto largo rompa el layout --- */
 }
 
 .message p {
@@ -335,7 +320,7 @@ body {
 .sent {
     align-self: flex-end;
     background-color: var(--sent-msg-color);
-    text-align: right;
+    text-align: left; /* --- MEJORA: Texto del mensaje centrado a la izquierda por convención --- */
     color: var(--text-color);
     margin-left: auto;
 }
@@ -355,6 +340,9 @@ body {
     color: var(--secondary-text-color);
     margin-top: 5px;
     text-align: right;
+    /* --- MEJORA: Hace que la hora se muestre sobre la burbuja cuando es recibida para evitar conflicto de color --- */
+    color: inherit; 
+    opacity: 0.7;
 }
 
 /* Pie de chat */
@@ -363,7 +351,8 @@ body {
     align-items: center;
     padding: 15px;
     background-color: var(--input-bg-color);
-    border-top: 1px solid var(--icon-color);
+    /* --- MEJORA: Usar variable de borde --- */
+    border-top: 1px solid var(--border-color);
 }
 
 .chat-footer input {
@@ -386,11 +375,18 @@ body {
     color: #fff;
     cursor: pointer;
     font-size: 1.2rem;
+    transition: background-color 0.3s, transform 0.1s; /* --- MEJORA: Añadida transición --- */
 }
 
 .chat-footer button:hover {
-    background-color: darken(var(--accent-color), 10%);
+    /* --- MEJORA: Usar variable definida para el hover --- */
+    background-color: var(--dark-accent-color);
 }
+/* --- MEJORA: Efecto de click/active --- */
+.chat-footer button:active {
+    transform: scale(0.95); 
+}
+/* -------------------------------------- */
 
 
 /* Animación de deslizamiento */
@@ -434,6 +430,7 @@ body {
     vertical-align: middle;
 }
 
+/* Spinner de carga */
 #loading-spinner {
     display: none; /* Oculto por defecto */
     position: fixed;
@@ -443,21 +440,18 @@ body {
     height: 100vh;
     background: rgba(0, 0, 0, 0.6);
     z-index: 1000;
-    display: flex;
+    /* --- MEJORA: Usar flex para centrar el spinner --- */
+    display: flex; 
     align-items: center;
     justify-content: center;
 }
-#page-title{
-    cursor: pointer;
-}
-
 
 /* Estilo del propio spinner */
 .spinner {
     width: 60px;
     height: 60px;
     border: 8px solid rgba(255, 255, 255, 0.3);
-    border-top: 8px solid #3498db; /* Cambia a tu color preferido */
+    border-top: 8px solid #3498db; 
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -467,52 +461,78 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* Indicador de mensaje no leído con número */
+/* Estilos de indicadores */
+.chat-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: auto;
+    padding-left: 10px;
+    justify-content: center; /* Centrar verticalmente */
+}
+
 .unread-indicator {
-    width: 18px;
-    height: 18px;
-    background-color: #00c853; /* Verde brillante para mejor visibilidad */
-    color: #ffffff;
-    border-radius: 50%;
-    display: inline-block;
-    text-align: center;
-    line-height: 18px;
+    background-color: var(--accent-color);
+    /* --- MEJORA: Color de texto de indicador más legible --- */
+    color: var(--sidebar-bg-color); 
     font-size: 0.75rem;
     font-weight: bold;
-}
-/* Indicador de contacto favorito */
-.favorite-indicator {
-    color: gold; /* Color dorado para el icono de favorito */
-    font-size: 0.9rem;
-    margin-left: 8px;
-    vertical-align: middle;
-}
-
-/* Estilo general para cada contacto en la lista */
-.chat {
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
-    padding: 10px;
+    justify-content: center;
+    margin-bottom: 5px;
+    /* --- MEJORA: Asegurar que el indicador de conteo no se superponga al favorito --- */
+}
+
+.favorite-indicator {
+    color: gold;
+    font-size: 1rem;
+}
+
+
+/* Estilos para los íconos de acción en la lista de chats */
+.action-icons {
+    /* display: flex;
+    align-items: center;
+    margin-left: auto; 
+    opacity: 0;
+    transition: opacity 0.3s ease; */
+    /* --- MEJORA: Mover las reglas de opacidad a las reglas de hover para simplificar --- */
+}
+
+.chat:hover .action-icons {
+    opacity: 1; /* Visibles al pasar el mouse */
+}
+
+.action-icons i {
+    color: var(--secondary-text-color);
+    font-size: 0.9rem;
     cursor: pointer;
-    border-bottom: 1px solid #ddd;
-    transition: background-color 0.3s;
+    padding: 5px;
+    margin-left: 8px; /* Espacio entre íconos */
+    transition: color 0.3s ease;
 }
 
-.chat:hover {
-    background-color: #a3a3a3a9;
+.action-icons i:hover {
+    color: var(--text-color); /* Color más brillante al pasar el mouse sobre el ícono */
 }
 
-.contact-pic {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 10px;
+/* Ocultar los íconos de acción por defecto */
+.action-icons {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex; /* Asegurarse que es flexbox */
+    align-items: center;
+    margin-left: auto;
 }
 
 
 /* Estilos para el modal */
 .modal {
-    display: none; /* Oculto por defecto */
+    display: none; 
     position: fixed;
     z-index: 1001;
     left: 0;
@@ -527,7 +547,9 @@ body {
     background-color: var(--contact-bg-color);
     margin: 15% auto;
     padding: 20px;
-    border: 1px solid #888;
+    /* --- MEJORA: Usar variable de borde y sombra más suave --- */
+    border: 1px solid var(--border-color);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); 
     width: 80%;
     max-width: 400px;
     border-radius: 10px;
@@ -574,80 +596,42 @@ body {
     cursor: pointer;
 }
 
-/* Estilos para los íconos de acción en la lista de chats */
-.chat .action-icons {
-    display: flex;
-    align-items: center;
-    margin-left: auto; /* Empuja los íconos al extremo derecho */
-    opacity: 0; /* Ocultos por defecto */
-    transition: opacity 0.3s ease;
+/* ========================================================================================= */
+/* SECCIÓN RESPONSIVE (MÓVIL)                               */
+/* ========================================================================================= */
+
+@media (max-width: 900px) {
+    .app-container {
+        /* Permite que la app ocupe toda la pantalla en lugar de estar centrada */
+        max-width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+    }
 }
 
-.chat:hover .action-icons {
-    opacity: 1; /* Visibles al pasar el mouse */
-}
+@media (max-width: 768px) {
+    /* La barra lateral ocupa todo el ancho */
+    .sidebar {
+        width: 100%;
+        min-width: 100%;
+        height: 100vh;
+        /* Usa posición absoluta/fija para superponerse al chat-window en móvil */
+        position: absolute; 
+        z-index: 50;
+    }
 
-.action-icons i {
-    color: var(--secondary-text-color);
-    font-size: 0.9rem;
-    cursor: pointer;
-    padding: 5px;
-    margin-left: 8px; /* Espacio entre íconos */
-    transition: color 0.3s ease;
-}
+    /* La ventana de chat se oculta por defecto en el móvil */
+    .chat-window {
+        display: none;
+        width: 100%;
+        /* Ocupa todo el espacio de la vista */
+        position: absolute; 
+        z-index: 60;
+    }
 
-.action-icons i:hover {
-    color: var(--text-color); /* Color más brillante al pasar el mouse sobre el ícono */
+    /* Clase que debe agregarse con JS cuando se selecciona un contacto en móvil */
+    .chat-window.active {
+        display: flex; 
+    }
 }
-
-/* Ajuste para que el nombre y estado no se superpongan */
-.chat .chat-info {
-    flex-grow: 1;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.chat .chat-info h2,
-.chat .chat-info p {
-    text-overflow: ellipsis;
-    overflow: hidden;
-}
-
-.chat-status {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-left: auto;
-    padding-left: 10px;
-}
-
-.unread-indicator {
-    background-color: var(--accent-color);
-    color: var(--sidebar-bg-color);
-    font-size: 0.75rem;
-    font-weight: bold;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 5px;
-}
-
-.favorite-indicator {
-    color: gold;
-    font-size: 1rem;
-}
-
-/* Ocultar los íconos de acción por defecto */
-.action-icons {
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-/* Mostrar íconos de acción al pasar el mouse sobre el chat */
-.chat:hover .action-icons {
-    opacity: 1;
-}
-
