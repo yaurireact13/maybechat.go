@@ -3,9 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 
-function importLegacyJson(store) {
+function importLegacyJson(store, dir = __dirname) {
     const read = file => {
-        try { return JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf8')); } catch (e) { return null; }
+        try { return JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')); } catch (e) { return null; }
     };
     const users = read('users.json');
     const data = read('data.json');

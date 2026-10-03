@@ -200,6 +200,17 @@ app.post('/api/chat', requireAuth, async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor en funcionamiento en http://localhost:${PORT}`);
+// JSON mal formado: responde 400 en JSON en vez de volcar el stack
+app.use((err, req, res, next) => {
+    if (err.type === 'entity.parse.failed') return res.status(400).json({ error: 'JSON inválido' });
+    if (err.type === 'entity.too.large') return res.status(413).json({ error: 'Petición demasiado grande' });
+    next(err);
 });
+
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Servidor en funcionamiento en http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;
