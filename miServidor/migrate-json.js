@@ -1,33 +1,25 @@
-// Importa users.json y data.json (versión anterior) a SQLite. Es idempotente.
-// Uso: npm run migrate   (también corre solo al primer arranque si la base está vacía)
+// Importa los usuarios de users.json (versión anterior, con contraseñas ya hasheadas) a SQLite.
+// Los contactos y mensajes de data.json no se importan: eran de un chat con IA y no tienen equivalente.
+// Es idempotente. Uso: npm run migrate (también corre solo al primer arranque si la base está vacía)
 const fs = require('fs');
 const path = require('path');
 
 function importLegacyJson(store, dir = __dirname) {
-    const read = file => {
-        try { return JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')); } catch (e) { return null; }
-    };
-    const users = read('users.json');
-    const data = read('data.json');
-    if (!users && !data) return null;
+    let users;
+    try {
+        users = JSON.parse(fs.readFileSync(path.join(dir, 'users.json'), 'utf8'));
+    } catch (e) {
+        return null;
+    }
+    if (!Array.isArray(users)) return null;
 
-    const stats = { users: 0, contacts: 0, messages: 0 };
+    const stats = { users: 0 };
     store.db.transaction(() => {
-        for (const u of users || []) {
-            if (u && typeof u.username === 'string' && typeof u.passwordHash === 'string' && !store.getUser(u.username)) {
+        for (const u of users) {
+            if (u && typeof u.username === 'string' && u.username.trim() &&
+                typeof u.passwordHash === 'string' && !store.getUser(u.username)) {
                 store.createUser(u.username, u.passwordHash);
                 stats.users++;
-            }
-        }
-        for (const [username, d] of Object.entries(data || {})) {
-            if (!store.getUser(username) || !d || !Array.isArray(d.contacts)) continue;
-            if (store.getContacts(username).length === 0) {
-                store.setContacts(username, d.contacts);
-                stats.contacts += d.contacts.length;
-            }
-            for (const [contactId, msgs] of Object.entries(d.conversations || {})) {
-                if (!store.hasContact(username, contactId) || store.getConversations(username)[contactId]) continue;
-                for (const m of msgs) { store.addMessage(username, contactId, m); stats.messages++; }
             }
         }
     })();
@@ -38,5 +30,5 @@ module.exports = { importLegacyJson };
 
 if (require.main === module) {
     const stats = importLegacyJson(require('./db'));
-    console.log(stats ? `Migrado: ${stats.users} usuarios, ${stats.contacts} contactos, ${stats.messages} mensajes` : 'No hay users.json ni data.json que migrar');
+    console.log(stats ? `Migrado: ${stats.users} usuarios` : 'No hay users.json que migrar');
 }

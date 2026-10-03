@@ -1,0 +1,22 @@
+# Blueprint de Render (https://render.com/docs/blueprint-spec). Plan "starter" porque el disco persistente
+# (donde vive la base SQLite) no está disponible en el plan gratuito.
+services:
+  - type: web
+    name: maybechat
+    runtime: node
+    plan: starter
+    rootDir: miServidor
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DB_FILE
+        value: /var/data/maybechat.db
+      - key: TRUST_PROXY
+        value: "1"
+    disk:
+      name: maybechat-data
+      mountPath: /var/data
+      sizeGB: 1

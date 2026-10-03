@@ -1,129 +1,110 @@
+// Lista de chats: búsqueda de usuarios, agregar, favoritos, eliminar y vaciar (cada usuario ve lo suyo)
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
-const { startServer, contact } = require('./helpers');
+const { startServer } = require('./helpers');
 
-let t, ana, beto;
+let t, ana, beto, carla;
 before(async () => {
     t = await startServer();
-    ana = await t.newUser('ana');
-    beto = await t.newUser('beto');
+    ana = await t.newUser('Ana');
+    beto = await t.newUser('Beto');
+    carla = await t.newUser('Carla');
+    await t.newUser('Carlos');
 });
 after(() => t.close());
 
-const msg = (text, sender = 'Tú') => ({ sender, text, time: '10:00' });
+const chats = async token => (await t.request('GET', '/api/chats', { token })).body;
+const send = (token, to, text) => t.request('POST', `/api/chats/${to}/messages`, { token, body: { text } });
 
-test('la primera vez se siembran los contactos desde contacts.json', async () => {
-    const r = await t.request('GET', '/api/contacts', { token: ana });
+test('un usuario nuevo empieza sin chats', async () => {
+    assert.deepEqual(await chats(ana), []);
+});
+
+test('busca usuarios por prefijo sin distinguir mayúsculas y sin incluirse a sí mismo', async () => {
+    const r = await t.request('GET', '/api/users?q=car', { token: ana });
+    assert.deepEqual(r.body.map(u => u.username), ['Carla', 'Carlos']);
+    assert.equal(r.body[0].online, false);
+    assert.deepEqual((await t.request('GET', '/api/users?q=AN', { token: beto })).body.map(u => u.username), ['Ana']);
+    assert.deepEqual((await t.request('GET', '/api/users?q=an', { token: ana })).body, [], 'no se lista a sí mismo');
+});
+
+test('la búsqueda exige 2+ caracteres y trata % y _ como texto', async () => {
+    for (const q of ['', 'a', '%', '_', '%%', 'a%']) {
+        assert.deepEqual((await t.request('GET', `/api/users?q=${encodeURIComponent(q)}`, { token: ana })).body, [], q);
+    }
+});
+
+test('agrega un usuario a la lista (con el nombre canónico) y es idempotente', async () => {
+    const r = await t.request('POST', '/api/chats', { token: ana, body: { username: 'beto' } });
     assert.equal(r.status, 200);
-    assert.ok(r.body.length >= 1);
-    assert.ok(r.body.every(c => typeof c.id === 'string' && typeof c.name === 'string'));
-    // segunda lectura: no vuelve a sembrar
-    const again = await t.request('GET', '/api/contacts', { token: ana });
-    assert.deepEqual(again.body, r.body);
+    assert.equal(r.body.username, 'Beto');
+    assert.equal(r.body.unreadCount, 0);
+    assert.equal(r.body.lastMessage, null);
+    await t.request('POST', '/api/chats', { token: ana, body: { username: 'BETO' } });
+    assert.deepEqual((await chats(ana)).map(c => c.username), ['Beto']);
+    // agregar a alguien no lo agrega a la otra persona
+    assert.deepEqual(await chats(beto), []);
 });
 
-test('PUT /api/contacts guarda lista y orden, y completa valores por defecto', async () => {
-    const lista = [contact('b'), contact('a', { favorite: true, unread: true, unreadCount: 3, image: '' })];
-    assert.equal((await t.request('PUT', '/api/contacts', { token: ana, body: lista })).status, 200);
-    const r = await t.request('GET', '/api/contacts', { token: ana });
-    assert.deepEqual(r.body.map(c => c.id), ['b', 'a']);
-    assert.equal(r.body[1].favorite, true);
-    assert.equal(r.body[1].unreadCount, 3);
-    assert.equal(r.body[1].image, 'img/contactundefined.jpg');
-});
-
-test('PUT /api/contacts rechaza listas inválidas y no modifica nada', async () => {
-    const antes = (await t.request('GET', '/api/contacts', { token: ana })).body;
-    const malos = [null, 'x', {}, [contact('a'), contact('a')], [contact('a', { name: '  ' })],
-        [contact('a', { name: 'x'.repeat(101) })], [{ id: 5, name: 'num' }], Array.from({ length: 501 }, (_, i) => contact(String(i)))];
-    for (const body of malos) {
-        const r = await t.request('PUT', '/api/contacts', { token: ana, body });
-        assert.equal(r.status, 400, JSON.stringify(body).slice(0, 80));
+test('no se puede agregar a un usuario inexistente ni a sí mismo', async () => {
+    assert.equal((await t.request('POST', '/api/chats', { token: ana, body: { username: 'fantasma' } })).status, 404);
+    assert.equal((await t.request('POST', '/api/chats', { token: ana, body: { username: 'ANA' } })).status, 400);
+    for (const body of [{}, { username: 5 }, { username: ['Beto'] }]) {
+        assert.equal((await t.request('POST', '/api/chats', { token: ana, body })).status, 404, JSON.stringify(body));
     }
-    assert.deepEqual((await t.request('GET', '/api/contacts', { token: ana })).body, antes);
 });
 
-test('guarda mensajes en orden y los devuelve por contacto', async () => {
-    await t.request('PUT', '/api/contacts', { token: ana, body: [contact('1'), contact('2')] });
-    for (const m of [msg('uno'), msg('dos', 'Contacto 1'), msg('tres')]) {
-        assert.equal((await t.request('POST', '/api/conversations/1/messages', { token: ana, body: m })).status, 200);
-    }
-    const r = await t.request('GET', '/api/conversations', { token: ana });
-    assert.deepEqual(r.body['1'].map(m => m.text), ['uno', 'dos', 'tres']);
-    assert.equal(r.body['2'], undefined);
+test('favoritos: marca y desmarca, y valida el valor', async () => {
+    const r = await t.request('PATCH', '/api/chats/beto', { token: ana, body: { favorite: true } });
+    assert.equal(r.body.favorite, true);
+    assert.equal((await chats(ana))[0].favorite, true);
+    assert.equal((await t.request('PATCH', '/api/chats/Beto', { token: ana, body: { favorite: 'si' } })).status, 400);
+    await t.request('PATCH', '/api/chats/Beto', { token: ana, body: { favorite: false } });
+    assert.equal((await chats(ana))[0].favorite, false);
+    assert.equal((await t.request('PATCH', '/api/chats/fantasma', { token: ana, body: { favorite: true } })).status, 404);
 });
 
-test('rechaza mensajes inválidos y contactos inexistentes', async () => {
-    const malos = [{}, { sender: 'Tú' }, { sender: '', text: 'x', time: '1' }, { sender: 'Tú', text: 5, time: '1' },
-        { sender: 'Tú', text: 'x'.repeat(10001), time: '1' }];
-    for (const body of malos) {
-        assert.equal((await t.request('POST', '/api/conversations/1/messages', { token: ana, body })).status, 400);
-    }
-    assert.equal((await t.request('POST', '/api/conversations/nope/messages', { token: ana, body: msg('x') })).status, 404);
+test('los chats se ordenan por actividad reciente', async () => {
+    await t.request('POST', '/api/chats', { token: ana, body: { username: 'Carla' } });
+    await send(ana, 'Beto', 'hola Beto');
+    await send(ana, 'Carla', 'hola Carla');
+    assert.deepEqual((await chats(ana)).map(c => c.username), ['Carla', 'Beto']);
+    await send(ana, 'Beto', 'otra vez');
+    assert.deepEqual((await chats(ana)).map(c => c.username), ['Beto', 'Carla']);
 });
 
-test('conserva solo los últimos 200 mensajes por chat', async () => {
-    await t.request('PUT', '/api/contacts', { token: ana, body: [contact('tope')] });
-    for (let i = 1; i <= 205; i++) {
-        await t.request('POST', '/api/conversations/tope/messages', { token: ana, body: msg(`m${i}`) });
-    }
-    const chat = (await t.request('GET', '/api/conversations', { token: ana })).body.tope;
-    assert.equal(chat.length, 200);
-    assert.equal(chat[0].text, 'm6');
-    assert.equal(chat.at(-1).text, 'm205');
+test('eliminar un chat lo oculta solo para ti y borra tu historial', async () => {
+    assert.equal((await t.request('DELETE', '/api/chats/Carla', { token: ana })).status, 200);
+    assert.deepEqual((await chats(ana)).map(c => c.username), ['Beto']);
+    assert.deepEqual((await t.request('GET', '/api/chats/Carla/messages', { token: ana })).body, []);
+    // Carla conserva el suyo
+    const deCarla = await chats(carla);
+    assert.equal(deCarla[0].username, 'Ana');
+    assert.equal(deCarla[0].lastMessage.text, 'hola Carla');
+    assert.equal((await t.request('GET', '/api/chats/Ana/messages', { token: carla })).body.length, 1);
 });
 
-test('DELETE borra el historial del chat sin tocar el contacto ni otros chats', async () => {
-    await t.request('PUT', '/api/contacts', { token: ana, body: [contact('x'), contact('y')] });
-    await t.request('POST', '/api/conversations/x/messages', { token: ana, body: msg('a') });
-    await t.request('POST', '/api/conversations/y/messages', { token: ana, body: msg('b') });
-    assert.equal((await t.request('DELETE', '/api/conversations/x', { token: ana })).status, 200);
-    const conv = (await t.request('GET', '/api/conversations', { token: ana })).body;
-    assert.equal(conv.x, undefined);
-    assert.equal(conv.y.length, 1);
-    const ids = (await t.request('GET', '/api/contacts', { token: ana })).body.map(c => c.id);
-    assert.deepEqual(ids, ['x', 'y']);
+test('si te escriben o reabres el chat eliminado, vuelve sin el historial viejo', async () => {
+    await send(carla, 'Ana', 'volví');
+    const lista = await chats(ana);
+    assert.deepEqual(lista.map(c => c.username).sort(), ['Beto', 'Carla']);
+    const msgs = (await t.request('GET', '/api/chats/Carla/messages', { token: ana })).body;
+    assert.deepEqual(msgs.map(m => m.text), ['volví'], 'solo lo posterior a la eliminación');
 });
 
-test('quitar un contacto borra también sus mensajes (cascada)', async () => {
-    await t.request('PUT', '/api/contacts', { token: ana, body: [contact('k1'), contact('k2')] });
-    await t.request('POST', '/api/conversations/k1/messages', { token: ana, body: msg('a') });
-    await t.request('PUT', '/api/contacts', { token: ana, body: [contact('k2')] });
-    assert.deepEqual((await t.request('GET', '/api/conversations', { token: ana })).body, {});
-    // si el contacto vuelve a crearse no reaparece el historial viejo
-    await t.request('PUT', '/api/contacts', { token: ana, body: [contact('k1'), contact('k2')] });
-    assert.deepEqual((await t.request('GET', '/api/conversations', { token: ana })).body, {});
+test('vaciar el chat borra el historial para ti pero el chat sigue en tu lista', async () => {
+    assert.equal((await t.request('POST', '/api/chats/Beto/clear', { token: ana })).status, 200);
+    assert.deepEqual((await t.request('GET', '/api/chats/Beto/messages', { token: ana })).body, []);
+    const beto1 = (await chats(ana)).find(c => c.username === 'Beto');
+    assert.equal(beto1.lastMessage, null);
+    assert.equal(beto1.unreadCount, 0);
+    // Beto sigue viendo todo
+    assert.equal((await t.request('GET', '/api/chats/Ana/messages', { token: beto })).body.length, 2);
 });
 
-test('cada usuario ve solo sus datos', async () => {
-    await t.request('PUT', '/api/contacts', { token: ana, body: [contact('compartido', { name: 'De Ana' })] });
-    await t.request('POST', '/api/conversations/compartido/messages', { token: ana, body: msg('secreto de ana') });
-
-    const contactosBeto = (await t.request('GET', '/api/contacts', { token: beto })).body;
-    assert.ok(!contactosBeto.some(c => c.name === 'De Ana'));
-    assert.deepEqual((await t.request('GET', '/api/conversations', { token: beto })).body, {});
-    // Beto no puede escribir en un contacto de Ana ni borrar su chat
-    assert.equal((await t.request('POST', '/api/conversations/compartido/messages', { token: beto, body: msg('intruso') })).status, 404);
-    await t.request('DELETE', '/api/conversations/compartido', { token: beto });
-    const chatAna = (await t.request('GET', '/api/conversations', { token: ana })).body.compartido;
-    assert.deepEqual(chatAna.map(m => m.text), ['secreto de ana']);
-});
-
-test('JSON mal formado o demasiado grande responde error limpio', async () => {
-    const raw = async (body) => {
-        const res = await fetch(`${t.base}/api/contacts`, {
-            method: 'PUT', body,
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ana}` }
-        });
-        return { status: res.status, body: await res.json() };
-    };
-    assert.deepEqual(await raw('{no es json'), { status: 400, body: { error: 'JSON inválido' } });
-    assert.equal((await raw(JSON.stringify([contact('a', { status: 'x'.repeat(2 * 1024 * 1024) })]))).status, 413);
-});
-
-test('guarda texto con HTML y comillas tal cual (se escapa al pintar, no al guardar)', async () => {
-    await t.request('PUT', '/api/contacts', { token: ana, body: [contact('h', { name: `<img src=x onerror=alert(1)> 'Ñandú'` })] });
-    await t.request('POST', '/api/conversations/h/messages', { token: ana, body: msg(`<b>"hola"</b> 'ñ' 😀`) });
-    assert.equal((await t.request('GET', '/api/contacts', { token: ana })).body[0].name, `<img src=x onerror=alert(1)> 'Ñandú'`);
-    assert.equal((await t.request('GET', '/api/conversations', { token: ana })).body.h[0].text, `<b>"hola"</b> 'ñ' 😀`);
+test('al borrar el chat no cuentan como no leídos los mensajes anteriores', async () => {
+    await send(beto, 'Ana', 'viejo');
+    assert.equal((await chats(ana)).find(c => c.username === 'Beto').unreadCount, 1);
+    await t.request('POST', '/api/chats/Beto/clear', { token: ana });
+    assert.equal((await chats(ana)).find(c => c.username === 'Beto').unreadCount, 0);
 });

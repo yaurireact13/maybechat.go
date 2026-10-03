@@ -10,10 +10,16 @@ export async function api(url, options = {}) {
         body: options.body === undefined ? undefined : JSON.stringify(options.body)
     });
     if (response.status === 401) {
-        localStorage.removeItem('token');
-        window.location.href = 'Session/login.html';
+        endSession();
         throw new Error('Sesión expirada');
     }
-    if (!response.ok) throw new Error(`Error ${response.status} en ${url}`);
-    return response.json();
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error((data && data.error) || `Error ${response.status}`);
+    return data;
+}
+
+export function endSession() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    window.location.href = 'Session/login.html';
 }

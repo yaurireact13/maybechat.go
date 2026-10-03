@@ -19,9 +19,11 @@
                 <button id="add-contact-button"><i class="fas fa-user-plus"></i></button>
             </div>
 
+            <p id="me-label" class="me-label"></p>
+
             <!-- Cuadro de búsqueda (Fijo) -->
             <div class="search-box">
-                <input type="text" placeholder="Buscar o empezar un nuevo chat" id="search-input">
+                <input type="text" placeholder="Buscar en tus chats" autocomplete="off" id="search-input">
             </div>
 
             <!-- Botones de filtro de contactos (Fijo) -->
@@ -29,7 +31,6 @@
                 <button class="filter-button active">Todos</button>
                 <button class="filter-button">No leídos</button>
                 <button class="filter-button">Favoritos</button>
-                <button class="filter-button">Grupos</button>
             </div>
 
             <!-- Contenedor de la lista de contactos con scroll -->
@@ -43,14 +44,14 @@
         <div class="chat-window">
             <!-- Encabezado de la ventana de chat -->
             <div class="chat-header">
-                <img src="img/perfil1.jpg" alt="Contact" class="contact-pic" id="chat-header-pic">
+                <img src="img/contactundefined.jpg" alt="" class="contact-pic" id="chat-header-pic" hidden>
                 <div class="contact-info">
-                    <h2 id="chat-header-name">+51 921 876 815 (Tú)</h2>
-                    <p>En línea 🟢</p>
+                    <h2 id="chat-header-name">MaybeChat</h2>
+                    <p id="chat-header-status">Selecciona un chat</p>
                 </div>
                 <div class="header-actions">
                     <button id="logout-button"><b>Cerrar Sesión</b></button>
-                    <button id="clear-chat-button" title="Borrar chat"><i class="fas fa-trash-alt"></i></button>
+                    <button id="clear-chat-button" title="Vaciar chat" hidden><i class="fas fa-trash-alt"></i></button>
                     <i class="fas fa-ellipsis-v" id="options-icon" style="display: none;"></i> <!-- Ocultamos el ícono anterior -->
                 </div>
             </div>
@@ -62,8 +63,8 @@
 
             <!-- Pie de la ventana de chat para enviar mensajes -->
             <div class="chat-footer">
-                <input type="text" placeholder="Escribe un mensaje" id="message-input">
-                <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+                <input type="text" placeholder="Escribe un mensaje" id="message-input" maxlength="2000" autocomplete="off" disabled>
+                <button id="send-button" disabled><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
@@ -73,19 +74,17 @@
         <div class="spinner"></div>
     </div>
 
-    <!-- Modal para agregar contacto -->
+    <!-- Modal para iniciar un chat con otro usuario -->
     <div id="add-contact-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2>Añadir Nuevo Contacto</h2>
-            <form id="add-contact-form">
-                <label for="contact-name">Nombre:</label>
-                <input type="text" id="contact-name" required>
-                <label for="contact-phone">Teléfono:</label>
-                <input type="text" id="contact-phone" required>
-                <label for="contact-img">URL de la imagen:</label>
-                <input type="text" id="contact-img">
-                <button type="submit">Guardar Contacto</button>
+            <h2>Nuevo chat</h2>
+            <form id="add-contact-form" autocomplete="off">
+                <label for="contact-name">Busca a un usuario registrado:</label>
+                <input type="text" id="contact-name" placeholder="Escribe su nombre de usuario" maxlength="20" required>
+                <p id="add-contact-error" class="form-error" role="alert"></p>
+                <ul id="user-results" class="user-results"></ul>
+                <button type="submit">Iniciar chat</button>
             </form>
         </div>
     </div>
