@@ -1,4 +1,6 @@
 // js/ui.js
+import { clearActiveChat } from './chat.js';
+
 const chatList = document.getElementById('chat-list');
 const chatBody = document.getElementById('chat-body');
 const logoutButton = document.getElementById('logout-button');
@@ -74,6 +76,7 @@ function setupClearChat() {
     clearChatButton.addEventListener('click', () => {
         if (confirm('¿Estás seguro de que deseas borrar este chat?')) {
             chatBody.innerHTML = '';
+            clearActiveChat();
         }
     });
 }

@@ -6,35 +6,33 @@ const chatHeaderName = document.getElementById('chat-header-name');
 const chatHeaderPic = document.getElementById('chat-header-pic');
 const chatList = document.getElementById('chat-list');
 
-let responseSent = false;
-let activeContact = null;
+const MAX_HISTORY = 20;
 
-// 🔹 Historial de mensajes por contacto
+// Contacto activo y historial de mensajes por contactId
+let activeContact = null; // { id, name }
 const conversations = {};
+// Contactos con una respuesta de la IA en curso
+const pending = new Set();
 
 export function setupChatListeners() {
     chatList.addEventListener('click', event => {
+        if (event.target.closest('.action-icons')) return;
         const chat = event.target.closest('.chat');
-        if (chat) {
-            const contactName = chat.querySelector('.chat-info h2').textContent;
-            const contactPicSrc = chat.querySelector('.contact-pic').src;
+        if (!chat) return;
 
-            activeContact = contactName;
-            chatHeaderPic.src = contactPicSrc;
-            chatHeaderName.textContent = contactName;
+        const name = chat.querySelector('.chat-info h2').textContent;
+        activeContact = { id: chat.dataset.contactId, name };
+        chatHeaderPic.src = chat.querySelector('.contact-pic').src;
+        chatHeaderName.textContent = name;
 
-            // Mostrar historial si ya existe
-            chatBody.innerHTML = '';
-            if (conversations[contactName]) {
-                conversations[contactName].forEach(msg =>
-                    renderMessage(msg.sender, msg.text, msg.time)
-                );
-            } else {
-                // Si no existe historial, lo creamos y mostramos saludo inicial
-                conversations[contactName] = [];
-                simulateMessages(contactName);
-            }
+        const history = conversations[activeContact.id] ??= [];
+        chatBody.innerHTML = '';
+        if (history.length === 0) {
+            addMessage(activeContact.id, name, 'Hola, ¿Puedes decirme algo nuevo?');
+        } else {
+            history.forEach(msg => renderMessage(msg.sender, msg.text, msg.time));
         }
+        if (pending.has(activeContact.id)) showTypingStatus();
     });
 
     sendButton.addEventListener('click', sendMessage);
@@ -46,37 +44,15 @@ export function setupChatListeners() {
     });
 }
 
-function simulateMessages(contactName) {
-    const messages = [{ sender: contactName, text: 'Hola, ¿Puedes decirme algo nuevo?' }];
-    messages.forEach(message => appendMessage(message.sender, message.text));
+export function clearActiveChat() {
+    if (activeContact) conversations[activeContact.id] = [];
 }
 
-async function appendMessage(sender, text) {
+// Guarda el mensaje en el historial del contacto y lo pinta si ese chat está abierto
+function addMessage(contactId, sender, text) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    // 🔹 Guardar en el historial del contacto activo
-    if (activeContact) {
-        conversations[activeContact].push({ sender, text, time });
-    }
-
-    // Renderizar en pantalla
-    renderMessage(sender, text, time);
-
-    if (sender === 'Tú' && !responseSent) {
-        responseSent = true;
-        showTypingStatus();
-        try {
-            const responseText = await getAIResponse(text);
-            const typingStatus = document.getElementById('typing-status');
-            if (typingStatus) typingStatus.remove();
-            await appendMessage(activeContact, responseText); // IA responde como el contacto
-        } catch (error) {
-            console.error("Error al obtener respuesta de la IA:", error);
-            const typingStatus = document.getElementById('typing-status');
-            if (typingStatus) typingStatus.remove();
-            await appendMessage(activeContact, 'Lo siento, no puedo responder en este momento.');
-        }
-    }
+    (conversations[contactId] ??= []).push({ sender, text, time });
+    if (activeContact?.id === contactId) renderMessage(sender, text, time);
 }
 
 function renderMessage(sender, text, time) {
@@ -93,42 +69,70 @@ function renderMessage(sender, text, time) {
 }
 
 function showTypingStatus() {
+    hideTypingStatus();
     const typingDiv = document.createElement('div');
     typingDiv.classList.add('message', 'received');
     typingDiv.id = 'typing-status';
-    typingDiv.innerHTML = `<p><em>Escribiendo...</em></p>`;
+    const p = document.createElement('p');
+    const em = document.createElement('em');
+    em.textContent = 'Escribiendo...';
+    p.appendChild(em);
+    typingDiv.appendChild(p);
     chatBody.appendChild(typingDiv);
     chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-async function getAIResponse(message) {
-    try {
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({ message: message })
-        });
-        if (response.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = 'Session/login.html';
-        }
-        if (!response.ok) throw new Error('La respuesta de la red no fue correcta');
-        const data = await response.json();
-        return data.reply;
-    } catch (error) {
-        console.error('Error en getAIResponse:', error);
-        return 'Error al conectar con la IA.';
-    }
+function hideTypingStatus() {
+    document.getElementById('typing-status')?.remove();
 }
 
-function sendMessage() {
-    const messageText = inputField.value.trim();
-    if (messageText !== '' && activeContact) {
-        appendMessage('Tú', messageText);
-        responseSent = false;
-        inputField.value = '';
+// Historial en el formato que espera el servidor
+function buildPayload(contact) {
+    return (conversations[contact.id] || []).slice(-MAX_HISTORY).map(msg => ({
+        role: msg.sender === 'Tú' ? 'user' : 'assistant',
+        content: msg.text
+    }));
+}
+
+async function getAIResponse(contact) {
+    const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ contactName: contact.name, messages: buildPayload(contact) })
+    });
+    if (response.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = 'Session/login.html';
+        throw new Error('Sesión expirada');
     }
+    if (!response.ok) throw new Error('La respuesta de la red no fue correcta');
+    const data = await response.json();
+    return data.reply;
+}
+
+async function sendMessage() {
+    const text = inputField.value.trim();
+    if (!text || !activeContact) return;
+
+    const contact = activeContact; // el usuario puede cambiar de chat mientras espera
+    if (pending.has(contact.id)) return; // una respuesta a la vez por contacto
+
+    inputField.value = '';
+    addMessage(contact.id, 'Tú', text);
+
+    pending.add(contact.id);
+    showTypingStatus();
+    let reply;
+    try {
+        reply = await getAIResponse(contact);
+    } catch (error) {
+        console.error('Error al obtener respuesta de la IA:', error);
+        reply = 'Lo siento, no puedo responder en este momento.';
+    }
+    pending.delete(contact.id);
+    if (activeContact?.id === contact.id) hideTypingStatus();
+    addMessage(contact.id, contact.name, reply);
 }

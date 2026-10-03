@@ -81,29 +81,37 @@ app.post('/login', (req, res) => {
     }
 });
 
-// Nueva ruta para el chat con IA usando Ollama
-app.post('/api/chat', requireAuth, async (req, res) => {
-    const { message } = req.body;
+// Ruta para el chat con IA usando Ollama
+const MAX_MESSAGES = 20;
+const MAX_CONTENT = 2000;
 
-    if (!message) {
-        return res.status(400).json({ error: 'El mensaje es requerido' });
+app.post('/api/chat', requireAuth, async (req, res) => {
+    const { messages, contactName } = req.body;
+
+    const valid = Array.isArray(messages) && messages.length > 0 &&
+        messages.every(m => m && ['user', 'assistant'].includes(m.role) &&
+            typeof m.content === 'string' && m.content.length <= MAX_CONTENT);
+    if (!valid || messages[messages.length - 1].role !== 'user') {
+        return res.status(400).json({ error: 'Se requiere un historial de mensajes válido que termine con un mensaje del usuario' });
     }
 
-    try {
-        // Conectarse a Ollama (asegúrate de que Ollama esté en ejecución)
-        const ollama = new Ollama();
-        
-        // Usar el modelo 'llama2'
-        await ollama.setModel('llama2');
+    const name = typeof contactName === 'string' ? contactName.slice(0, 50) : 'un amigo';
+    const transcript = messages.slice(-MAX_MESSAGES)
+        .map(m => `${m.role === 'user' ? 'Usuario' : name}: ${m.content}`)
+        .join('\n');
+    const prompt = `Eres ${name}, un contacto en un chat de mensajería. Responde en español, de forma breve y natural, como en una conversación por chat.\n\n${transcript}\n${name}:`;
 
-        const response = await ollama.generate(message);
+    try {
+        // Asegúrate de que Ollama esté en ejecución
+        const ollama = new Ollama();
+        await ollama.setModel('llama2');
+        const response = await ollama.generate(prompt);
 
         if (response && response.output) {
-            res.json({ reply: response.output });
+            res.json({ reply: response.output.trim() });
         } else {
             throw new Error('No se recibió una respuesta válida del modelo de IA.');
         }
-
     } catch (error) {
         console.error('Error al conectar con Ollama:', error);
         res.status(500).json({ error: 'No se pudo obtener una respuesta de la IA. Asegúrate de que Ollama esté instalado y en ejecución.' });
