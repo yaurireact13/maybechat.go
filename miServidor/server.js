@@ -35,7 +35,7 @@ function requireAuth(req, res, next) {
 
 // Middleware
 app.use(cors()); // Permite que el frontend acceda al backend
-app.use(express.json()); // Permite procesar datos en formato JSON
+app.use(express.json({ limit: '1mb' })); // Permite procesar datos en formato JSON
 
 // Servir archivos estáticos desde el directorio raíz del proyecto
 app.use(express.static(path.join(__dirname, '..')));
@@ -79,6 +79,102 @@ app.post('/login', (req, res) => {
     } else {
         res.status(401).json({ error: 'Credenciales incorrectas' });
     }
+});
+
+// Datos por usuario (contactos y conversaciones), persistidos en un JSON ignorado por git
+const DATA_FILE = path.join(__dirname, 'data.json');
+const userData = new Map(); // username -> { contacts: [] | null, conversations: { [contactId]: [] } }
+try {
+    for (const [name, value] of Object.entries(JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')))) {
+        userData.set(name, value);
+    }
+} catch (e) {
+    // sin datos todavía
+}
+function saveData() {
+    const tmp = DATA_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(Object.fromEntries(userData), null, 2));
+    fs.renameSync(tmp, DATA_FILE);
+}
+function getUserData(username) {
+    if (!userData.has(username)) userData.set(username, { contacts: null, conversations: {} });
+    return userData.get(username);
+}
+
+const MAX_CONTACTS = 500;
+const MAX_STORED_MESSAGES = 200;
+const isStr = (v, max) => typeof v === 'string' && v.length <= max;
+
+function sanitizeContact(c) {
+    if (!c || !isStr(c.id, 100) || !c.id || !isStr(c.name, 100) || !c.name.trim() ||
+        !isStr(c.status ?? '', 300) || !isStr(c.image ?? '', 500)) return null;
+    return {
+        id: c.id,
+        name: c.name,
+        status: c.status ?? '',
+        image: c.image || 'img/contactundefined.jpg',
+        group: c.group === true,
+        favorite: c.favorite === true,
+        unread: c.unread === true,
+        unreadCount: Number.isInteger(c.unreadCount) && c.unreadCount > 0 ? c.unreadCount : 0
+    };
+}
+
+app.use('/api', requireAuth);
+
+// Contactos: la primera vez se siembran desde contacts.json
+app.get('/api/contacts', (req, res) => {
+    const data = getUserData(req.user);
+    if (data.contacts === null) {
+        try {
+            const seed = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'contacts.json'), 'utf8'));
+            data.contacts = seed.map(c => sanitizeContact({ ...c, id: String(c.id) })).filter(Boolean);
+        } catch (e) {
+            data.contacts = [];
+        }
+        saveData();
+    }
+    res.json(data.contacts);
+});
+
+app.put('/api/contacts', (req, res) => {
+    const list = req.body;
+    if (!Array.isArray(list) || list.length > MAX_CONTACTS) {
+        return res.status(400).json({ error: 'Lista de contactos inválida' });
+    }
+    const contacts = list.map(sanitizeContact);
+    const ids = contacts.map(c => c && c.id);
+    if (contacts.includes(null) || new Set(ids).size !== ids.length) {
+        return res.status(400).json({ error: 'Contacto inválido o id duplicado' });
+    }
+    const data = getUserData(req.user);
+    data.contacts = contacts;
+    // Los chats de contactos eliminados se borran con ellos
+    for (const id of Object.keys(data.conversations)) {
+        if (!ids.includes(id)) delete data.conversations[id];
+    }
+    saveData();
+    res.json({ ok: true });
+});
+
+// Conversaciones por contacto
+app.get('/api/conversations', (req, res) => {
+    res.json(getUserData(req.user).conversations);
+});
+
+app.put('/api/conversations/:contactId', (req, res) => {
+    const data = getUserData(req.user);
+    const { contactId } = req.params;
+    const messages = req.body;
+    const valid = Array.isArray(messages) && messages.length <= MAX_STORED_MESSAGES &&
+        messages.every(m => m && isStr(m.sender, 100) && isStr(m.text, 10000) && isStr(m.time, 30));
+    if (!valid) return res.status(400).json({ error: 'Conversación inválida' });
+    if (!data.contacts || !data.contacts.some(c => c.id === contactId)) {
+        return res.status(404).json({ error: 'Contacto no encontrado' });
+    }
+    data.conversations[contactId] = messages.map(m => ({ sender: m.sender, text: m.text, time: m.time }));
+    saveData();
+    res.json({ ok: true });
 });
 
 // Ruta para el chat con IA usando Ollama

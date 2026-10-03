@@ -1,4 +1,6 @@
 // js/chat.js
+import { api } from './api.js';
+
 const chatBody = document.getElementById('chat-body');
 const inputField = document.getElementById('message-input');
 const sendButton = document.getElementById('send-button');
@@ -7,6 +9,7 @@ const chatHeaderPic = document.getElementById('chat-header-pic');
 const chatList = document.getElementById('chat-list');
 
 const MAX_HISTORY = 20;
+const MAX_STORED = 200;
 
 // Contacto activo y historial de mensajes por contactId
 let activeContact = null; // { id, name }
@@ -44,8 +47,24 @@ export function setupChatListeners() {
     });
 }
 
+export async function loadConversations() {
+    try {
+        Object.assign(conversations, await api('/api/conversations'));
+    } catch (error) {
+        console.error('Error al cargar las conversaciones:', error);
+    }
+}
+
+function saveConversation(contactId) {
+    const messages = (conversations[contactId] || []).slice(-MAX_STORED);
+    api(`/api/conversations/${encodeURIComponent(contactId)}`, { method: 'PUT', body: messages })
+        .catch(error => console.error('Error al guardar la conversación:', error));
+}
+
 export function clearActiveChat() {
-    if (activeContact) conversations[activeContact.id] = [];
+    if (!activeContact) return;
+    conversations[activeContact.id] = [];
+    saveConversation(activeContact.id);
 }
 
 // Guarda el mensaje en el historial del contacto y lo pinta si ese chat está abierto
@@ -53,6 +72,7 @@ function addMessage(contactId, sender, text) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     (conversations[contactId] ??= []).push({ sender, text, time });
     if (activeContact?.id === contactId) renderMessage(sender, text, time);
+    saveConversation(contactId);
 }
 
 function renderMessage(sender, text, time) {
@@ -95,21 +115,10 @@ function buildPayload(contact) {
 }
 
 async function getAIResponse(contact) {
-    const response = await fetch('/api/chat', {
+    const data = await api('/api/chat', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ contactName: contact.name, messages: buildPayload(contact) })
+        body: { contactName: contact.name, messages: buildPayload(contact) }
     });
-    if (response.status === 401) {
-        localStorage.removeItem('token');
-        window.location.href = 'Session/login.html';
-        throw new Error('Sesión expirada');
-    }
-    if (!response.ok) throw new Error('La respuesta de la red no fue correcta');
-    const data = await response.json();
     return data.reply;
 }
 
