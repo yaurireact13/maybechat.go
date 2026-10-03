@@ -24,6 +24,10 @@ app.get('/', (req, res) => {
 app.post('/register', (req, res) => {
     const { username, password } = req.body;
 
+    if (typeof username !== 'string' || typeof password !== 'string' || !username.trim() || password.length < 6) {
+        return res.status(400).json({ error: 'Usuario requerido y contraseña de al menos 6 caracteres' });
+    }
+
     // Verificar si el usuario ya existe
     if (users.find(user => user.username === username)) {
         return res.status(400).json({ error: 'El nombre de usuario ya existe' });

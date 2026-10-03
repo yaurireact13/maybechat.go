@@ -1,4 +1,10 @@
 // js/contacts.js
+function escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
 const chatList = document.getElementById('chat-list');
 
 export function loadContacts() {
@@ -15,10 +21,10 @@ export function loadContacts() {
 
                 contactElement.dataset.contactId = contact.id;
                 contactElement.innerHTML = `
-                    <img src="${contact.image}" alt="Contact" class="contact-pic">
+                    <img src="${escapeHTML(contact.image)}" alt="Contact" class="contact-pic">
                     <div class="chat-info">
-                        <h2>${contact.name}</h2>
-                        <p>${contact.status}</p>
+                        <h2>${escapeHTML(contact.name)}</h2>
+                        <p>${escapeHTML(contact.status)}</p>
                     </div>
                     <div class="chat-status">
                         ${contact.unread ? `<span class="unread-indicator">${contact.unreadCount}</span>` : ''}
@@ -73,10 +79,10 @@ function addContact(name, phone, image) {
     newContact.classList.add('chat');
     newContact.dataset.contactId = `new-${Date.now()}`;
     newContact.innerHTML = `
-        <img src="${image}" alt="Contact" class="contact-pic">
+        <img src="${escapeHTML(image)}" alt="Contact" class="contact-pic">
         <div class="chat-info">
-            <h2>${name}</h2>
-            <p>${phone}</p>
+            <h2>${escapeHTML(name)}</h2>
+            <p>${escapeHTML(phone)}</p>
         </div>
         <div class="action-icons">
             <i class="fas fa-trash-alt delete-contact"></i>

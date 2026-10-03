@@ -82,10 +82,12 @@ async function appendMessage(sender, text) {
 function renderMessage(sender, text, time) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender === 'Tú' ? 'sent' : 'received');
-    messageDiv.innerHTML = `
-        <p>${text}</p>
-        <span class="time">${time}</span>
-    `;
+    const p = document.createElement('p');
+    p.textContent = text;
+    const timeSpan = document.createElement('span');
+    timeSpan.classList.add('time');
+    timeSpan.textContent = time;
+    messageDiv.append(p, timeSpan);
     chatBody.appendChild(messageDiv);
     chatBody.scrollTop = chatBody.scrollHeight;
 }
@@ -101,7 +103,7 @@ function showTypingStatus() {
 
 async function getAIResponse(message) {
     try {
-        const response = await fetch('http://localhost:3000/api/chat', {
+        const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: message })
