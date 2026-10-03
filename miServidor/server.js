@@ -1,4 +1,3 @@
-const { Ollama } = require('ollama-node');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -6,7 +5,12 @@ const fs = require('fs');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// Configuración de Ollama (API HTTP oficial)
+const OLLAMA_URL = (process.env.OLLAMA_URL || 'http://127.0.0.1:11434').replace(/\/+$/, '');
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama2';
+const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS) || 60000;
 
 // Usuarios persistidos en un JSON (ignorado por git); contraseñas con hash bcrypt
 const USERS_FILE = path.join(__dirname, 'users.json');
@@ -192,25 +196,32 @@ app.post('/api/chat', requireAuth, async (req, res) => {
     }
 
     const name = typeof contactName === 'string' ? contactName.slice(0, 50) : 'un amigo';
-    const transcript = messages.slice(-MAX_MESSAGES)
-        .map(m => `${m.role === 'user' ? 'Usuario' : name}: ${m.content}`)
-        .join('\n');
-    const prompt = `Eres ${name}, un contacto en un chat de mensajería. Responde en español, de forma breve y natural, como en una conversación por chat.\n\n${transcript}\n${name}:`;
+    const system = `Eres ${name}, un contacto en un chat de mensajería. Responde en español, de forma breve y natural, como en una conversación por chat.`;
 
     try {
-        // Asegúrate de que Ollama esté en ejecución
-        const ollama = new Ollama();
-        await ollama.setModel('llama2');
-        const response = await ollama.generate(prompt);
+        const response = await fetch(`${OLLAMA_URL}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: OLLAMA_MODEL,
+                stream: false,
+                messages: [{ role: 'system', content: system }, ...messages.slice(-MAX_MESSAGES)]
+            }),
+            signal: AbortSignal.timeout(OLLAMA_TIMEOUT_MS)
+        });
 
-        if (response && response.output) {
-            res.json({ reply: response.output.trim() });
-        } else {
-            throw new Error('No se recibió una respuesta válida del modelo de IA.');
+        if (!response.ok) {
+            const detail = await response.text().catch(() => '');
+            throw new Error(`Ollama respondió ${response.status}: ${detail.slice(0, 200)}`);
         }
+
+        const data = await response.json();
+        const reply = data && data.message && typeof data.message.content === 'string' ? data.message.content.trim() : '';
+        if (!reply) throw new Error('No se recibió una respuesta válida del modelo de IA.');
+        res.json({ reply });
     } catch (error) {
-        console.error('Error al conectar con Ollama:', error);
-        res.status(500).json({ error: 'No se pudo obtener una respuesta de la IA. Asegúrate de que Ollama esté instalado y en ejecución.' });
+        console.error('Error al conectar con Ollama:', error.message);
+        res.status(502).json({ error: `No se pudo obtener una respuesta de la IA. Asegúrate de que Ollama esté en ejecución en ${OLLAMA_URL} y que el modelo "${OLLAMA_MODEL}" esté descargado (ollama pull ${OLLAMA_MODEL}).` });
     }
 });
 
