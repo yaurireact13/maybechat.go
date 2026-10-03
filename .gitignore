@@ -3,3 +3,4 @@ node_modules/
 miServidor/users.json
 miServidor/data.json
 miServidor/*.tmp
+miServidor/maybechat.db*

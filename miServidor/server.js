@@ -12,15 +12,14 @@ const OLLAMA_URL = (process.env.OLLAMA_URL || 'http://127.0.0.1:11434').replace(
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama2';
 const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS) || 60000;
 
-// Usuarios persistidos en un JSON (ignorado por git); contraseñas con hash bcrypt
-const USERS_FILE = path.join(__dirname, 'users.json');
-let users = [];
-try {
-    users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-} catch (e) {
-    users = [];
+const store = require('./db');
+const { importLegacyJson } = require('./migrate-json');
+
+// Primera ejecución con SQLite: importa users.json / data.json si existen
+if (store.countUsers() === 0) {
+    const stats = importLegacyJson(store);
+    if (stats) console.log(`Migrado desde JSON: ${stats.users} usuarios, ${stats.contacts} contactos, ${stats.messages} mensajes`);
 }
-const saveUsers = () => fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 
 // Sesiones en memoria: token -> { username, expires }
 const sessions = new Map();
@@ -58,13 +57,12 @@ app.post('/register', (req, res) => {
     }
 
     // Verificar si el usuario ya existe
-    if (users.find(user => user.username === username)) {
+    if (store.getUser(username)) {
         return res.status(400).json({ error: 'El nombre de usuario ya existe' });
     }
 
     // Guardar el nuevo usuario con la contraseña hasheada
-    users.push({ username, passwordHash: bcrypt.hashSync(password, 10) });
-    saveUsers();
+    store.createUser(username, bcrypt.hashSync(password, 10));
 
     res.json({ message: 'Registro exitoso' });
 });
@@ -74,9 +72,9 @@ app.post('/login', (req, res) => {
     const { username, password } = req.body;
     
     // Buscar al usuario y verificar la contraseña
-    const user = users.find(u => u.username === username);
+    const user = typeof username === 'string' ? store.getUser(username) : undefined;
 
-    if (user && typeof password === 'string' && bcrypt.compareSync(password, user.passwordHash)) {
+    if (user && typeof password === 'string' && bcrypt.compareSync(password, user.password_hash)) {
         const token = crypto.randomBytes(32).toString('hex');
         sessions.set(token, { username, expires: Date.now() + SESSION_TTL });
         res.json({ message: 'Inicio de sesión exitoso', token });
@@ -85,28 +83,7 @@ app.post('/login', (req, res) => {
     }
 });
 
-// Datos por usuario (contactos y conversaciones), persistidos en un JSON ignorado por git
-const DATA_FILE = path.join(__dirname, 'data.json');
-const userData = new Map(); // username -> { contacts: [] | null, conversations: { [contactId]: [] } }
-try {
-    for (const [name, value] of Object.entries(JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')))) {
-        userData.set(name, value);
-    }
-} catch (e) {
-    // sin datos todavía
-}
-function saveData() {
-    const tmp = DATA_FILE + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(Object.fromEntries(userData), null, 2));
-    fs.renameSync(tmp, DATA_FILE);
-}
-function getUserData(username) {
-    if (!userData.has(username)) userData.set(username, { contacts: null, conversations: {} });
-    return userData.get(username);
-}
-
 const MAX_CONTACTS = 500;
-const MAX_STORED_MESSAGES = 200;
 const isStr = (v, max) => typeof v === 'string' && v.length <= max;
 
 function sanitizeContact(c) {
@@ -128,17 +105,17 @@ app.use('/api', requireAuth);
 
 // Contactos: la primera vez se siembran desde contacts.json
 app.get('/api/contacts', (req, res) => {
-    const data = getUserData(req.user);
-    if (data.contacts === null) {
+    if (!store.getUser(req.user).contacts_seeded) {
+        let seed = [];
         try {
-            const seed = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'contacts.json'), 'utf8'));
-            data.contacts = seed.map(c => sanitizeContact({ ...c, id: String(c.id) })).filter(Boolean);
+            const raw = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'contacts.json'), 'utf8'));
+            seed = raw.map(c => sanitizeContact({ ...c, id: String(c.id) })).filter(Boolean);
         } catch (e) {
-            data.contacts = [];
+            seed = [];
         }
-        saveData();
+        store.setContacts(req.user, seed);
     }
-    res.json(data.contacts);
+    res.json(store.getContacts(req.user));
 });
 
 app.put('/api/contacts', (req, res) => {
@@ -151,33 +128,31 @@ app.put('/api/contacts', (req, res) => {
     if (contacts.includes(null) || new Set(ids).size !== ids.length) {
         return res.status(400).json({ error: 'Contacto inválido o id duplicado' });
     }
-    const data = getUserData(req.user);
-    data.contacts = contacts;
-    // Los chats de contactos eliminados se borran con ellos
-    for (const id of Object.keys(data.conversations)) {
-        if (!ids.includes(id)) delete data.conversations[id];
-    }
-    saveData();
+    store.setContacts(req.user, contacts);
     res.json({ ok: true });
 });
 
 // Conversaciones por contacto
 app.get('/api/conversations', (req, res) => {
-    res.json(getUserData(req.user).conversations);
+    res.json(store.getConversations(req.user));
 });
 
-app.put('/api/conversations/:contactId', (req, res) => {
-    const data = getUserData(req.user);
-    const { contactId } = req.params;
-    const messages = req.body;
-    const valid = Array.isArray(messages) && messages.length <= MAX_STORED_MESSAGES &&
-        messages.every(m => m && isStr(m.sender, 100) && isStr(m.text, 10000) && isStr(m.time, 30));
-    if (!valid) return res.status(400).json({ error: 'Conversación inválida' });
-    if (!data.contacts || !data.contacts.some(c => c.id === contactId)) {
+// Agrega un mensaje (se conservan los últimos 200 por chat)
+app.post('/api/conversations/:contactId/messages', (req, res) => {
+    const { sender, text, time } = req.body || {};
+    if (!isStr(sender, 100) || !sender || !isStr(text, 10000) || !isStr(time, 30)) {
+        return res.status(400).json({ error: 'Mensaje inválido' });
+    }
+    if (!store.hasContact(req.user, req.params.contactId)) {
         return res.status(404).json({ error: 'Contacto no encontrado' });
     }
-    data.conversations[contactId] = messages.map(m => ({ sender: m.sender, text: m.text, time: m.time }));
-    saveData();
+    store.addMessage(req.user, req.params.contactId, { sender, text, time });
+    res.json({ ok: true });
+});
+
+// Borra el historial de un chat
+app.delete('/api/conversations/:contactId', (req, res) => {
+    store.clearMessages(req.user, req.params.contactId);
     res.json({ ok: true });
 });
 

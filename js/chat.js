@@ -9,7 +9,6 @@ const chatHeaderPic = document.getElementById('chat-header-pic');
 const chatList = document.getElementById('chat-list');
 
 const MAX_HISTORY = 20;
-const MAX_STORED = 200;
 
 // Contacto activo y historial de mensajes por contactId
 let activeContact = null; // { id, name }
@@ -55,24 +54,25 @@ export async function loadConversations() {
     }
 }
 
-function saveConversation(contactId) {
-    const messages = (conversations[contactId] || []).slice(-MAX_STORED);
-    api(`/api/conversations/${encodeURIComponent(contactId)}`, { method: 'PUT', body: messages })
-        .catch(error => console.error('Error al guardar la conversación:', error));
+function saveMessage(contactId, message) {
+    api(`/api/conversations/${encodeURIComponent(contactId)}/messages`, { method: 'POST', body: message })
+        .catch(error => console.error('Error al guardar el mensaje:', error));
 }
 
 export function clearActiveChat() {
     if (!activeContact) return;
     conversations[activeContact.id] = [];
-    saveConversation(activeContact.id);
+    api(`/api/conversations/${encodeURIComponent(activeContact.id)}`, { method: 'DELETE' })
+        .catch(error => console.error('Error al borrar la conversación:', error));
 }
 
 // Guarda el mensaje en el historial del contacto y lo pinta si ese chat está abierto
 function addMessage(contactId, sender, text) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    (conversations[contactId] ??= []).push({ sender, text, time });
+    const message = { sender, text, time };
+    (conversations[contactId] ??= []).push(message);
     if (activeContact?.id === contactId) renderMessage(sender, text, time);
-    saveConversation(contactId);
+    saveMessage(contactId, message);
 }
 
 function renderMessage(sender, text, time) {
