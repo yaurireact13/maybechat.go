@@ -19,6 +19,7 @@ loginForm.addEventListener('submit', async event => {
         if (response.ok) {
             alert('Inicio de sesión exitoso!');
             localStorage.setItem('username', username);
+            localStorage.setItem('token', result.token);
             window.location.href = '../index.html';
         } else {
             alert(result.error || 'Nombre de usuario o contraseña incorrectos.');

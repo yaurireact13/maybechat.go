@@ -105,9 +105,16 @@ async function getAIResponse(message) {
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
             body: JSON.stringify({ message: message })
         });
+        if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = 'Session/login.html';
+        }
         if (!response.ok) throw new Error('La respuesta de la red no fue correcta');
         const data = await response.json();
         return data.reply;

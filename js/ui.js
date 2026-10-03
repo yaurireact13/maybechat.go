@@ -19,7 +19,7 @@ export function setupUI() {
 function setupLogout() {
     logoutButton.addEventListener('click', () => {
         localStorage.removeItem('username');
-        localStorage.removeItem('password');
+        localStorage.removeItem('token');
         window.location.href = 'Session/login.html';
     });
 }

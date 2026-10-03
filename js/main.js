@@ -4,6 +4,12 @@ import { setupChatListeners } from './chat.js';
 import { setupUI } from './ui.js';
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Sin sesión, volver al login (el servidor igualmente valida el token)
+    if (!localStorage.getItem('token')) {
+        window.location.href = 'Session/login.html';
+        return;
+    }
+
     // Inicializar todos los módulos
     loadContacts();
     setupContactManagement();
