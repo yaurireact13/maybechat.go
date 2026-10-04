@@ -1,0 +1,6 @@
+node_modules/
+.env
+miServidor/users.json
+miServidor/data.json
+miServidor/*.tmp
+miServidor/maybechat.db*

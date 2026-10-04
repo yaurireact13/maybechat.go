@@ -635,3 +635,83 @@ body {
         display: flex; 
     }
 }
+
+/* ===== Chat entre usuarios ===== */
+[hidden] { display: none !important; }
+
+.me-label {
+    margin: 0;
+    padding: 6px 15px;
+    font-size: 0.8rem;
+    color: var(--secondary-text-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.chat.active { background-color: var(--active-contact-color); }
+.chat-info p { text-overflow: ellipsis; overflow: hidden; }
+.chat.unread .chat-info p { color: var(--text-color); font-weight: 600; }
+.action-icons .far.fa-star, .action-icons .fas.fa-star { color: gold; }
+
+.list-empty {
+    padding: 20px 15px;
+    text-align: center;
+    color: var(--secondary-text-color);
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    margin: auto;
+    padding: 20px;
+    text-align: center;
+    color: var(--secondary-text-color);
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 8px;
+}
+
+.load-more {
+    align-self: center;
+    margin-bottom: 10px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 14px;
+    background: var(--contact-bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.chat-footer input:disabled, .chat-footer button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Modal de nuevo chat */
+.form-error { min-height: 1.2em; margin: 6px 0; color: #ff6b6b; font-size: 0.85rem; }
+.user-results { list-style: none; margin: 0 0 10px; padding: 0; max-height: 200px; overflow-y: auto; }
+.user-result {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    background: transparent;
+    color: inherit;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+}
+.user-result:hover { background: var(--active-contact-color); }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--icon-color); display: inline-block; }
+.dot.online { background: var(--accent-color); }
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    z-index: 1000;
+    max-width: 90vw;
+    padding: 10px 18px;
+    border-radius: 8px;
+    background: #7a1f1f;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}

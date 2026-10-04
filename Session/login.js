@@ -7,7 +7,7 @@ loginForm.addEventListener('submit', async event => {
     const password = document.getElementById('password').value.trim();
 
     try {
-        const response = await fetch('http://localhost:3000/login', {
+        const response = await fetch('/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -19,6 +19,7 @@ loginForm.addEventListener('submit', async event => {
         if (response.ok) {
             alert('Inicio de sesión exitoso!');
             localStorage.setItem('username', username);
+            localStorage.setItem('token', result.token);
             window.location.href = '../index.html';
         } else {
             alert(result.error || 'Nombre de usuario o contraseña incorrectos.');
