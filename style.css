@@ -18,6 +18,10 @@
     --dark-accent-color: #1faa4d; /* Versión más oscura de --accent-color para :hover */
 }
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -28,6 +32,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    height: 100dvh; /* en móvil descuenta la barra del navegador */
 }
 
 /* Fondo de patrón para el chat */
@@ -51,8 +56,9 @@ body {
     flex-direction: column;
     /* --- MEJORA: Usar 100% de la altura de .app-container, no 100vh --- */
     height: 100%; 
-    min-width: 300px; /* Ancho fijo para desktop */
+    min-width: 280px; /* Ancho mínimo para desktop */
     width: 30%;
+    min-height: 0;
 }
 
 /* Encabezado del chat con icono y título */
@@ -81,17 +87,36 @@ body {
     cursor: pointer;
 }
 
-#add-contact-button {
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
     background: none;
     border: none;
+    border-radius: 50%;
     color: var(--text-color);
     font-size: 1.2rem;
     cursor: pointer;
     padding: 5px;
 }
 
-#add-contact-button:hover {
+.icon-button:hover {
     color: var(--accent-color);
+}
+
+/* Solo se muestra en móvil (ver sección responsive) */
+.back-button {
+    display: none;
+    margin-right: 4px;
+}
+
+button:focus-visible,
+input:focus-visible,
+.chat:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
 }
 
 /* Búsqueda */
@@ -218,7 +243,8 @@ body {
 /* Fondo de la ventana de chat con patrón */
 .chat-window {
     /* --- MEJORA: width ajustado para que sea flexible en desktop (100% - sidebar) --- */
-    width: 70%; 
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     background-color: var(--chat-bg-color);
@@ -244,8 +270,15 @@ body {
     margin-right: 10px;
 }
 
+.chat-header .contact-info {
+    min-width: 0;
+}
+
 .chat-header .contact-info h2 {
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: 1.2em;
     color: var(--text-color);
 }
@@ -264,6 +297,8 @@ body {
 }
 
 .header-actions button {
+    min-width: 40px;
+    min-height: 40px;
     background-color: var(--accent-color);
     color: #fff;
     border: none;
@@ -310,7 +345,7 @@ body {
     font-size: 1rem;
     line-height: 1.5;
     color: var(--text-color);
-    word-wrap: break-word; /* --- MEJORA: Evita que el texto largo rompa el layout --- */
+    overflow-wrap: anywhere; /* Evita que enlaces o palabras largas rompan el layout */
 }
 
 .message p {
@@ -357,6 +392,7 @@ body {
 
 .chat-footer input {
     flex-grow: 1;
+    min-width: 0;
     padding: 10px;
     border: none;
     border-radius: 20px;
@@ -368,6 +404,9 @@ body {
 }
 
 .chat-footer button {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
     padding: 10px;
     border: none;
     border-radius: 50%;
@@ -545,18 +584,22 @@ body {
 
 .modal-content {
     background-color: var(--contact-bg-color);
-    margin: 15% auto;
+    margin: 10vh auto;
     padding: 20px;
     /* --- MEJORA: Usar variable de borde y sombra más suave --- */
     border: 1px solid var(--border-color);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); 
-    width: 80%;
+    width: calc(100% - 32px);
     max-width: 400px;
     border-radius: 10px;
     color: var(--text-color);
 }
 
 .close-button {
+    background: none;
+    border: none;
+    padding: 0 6px;
+    line-height: 1;
     color: #aaa;
     float: right;
     font-size: 28px;
@@ -583,6 +626,7 @@ body {
     border: 1px solid var(--input-bg-color);
     background-color: var(--input-bg-color);
     color: var(--text-color);
+    font-size: 1rem; /* 16px: evita el zoom automático de iOS al enfocar */
 }
 
 #add-contact-form button {
@@ -605,34 +649,71 @@ body {
         /* Permite que la app ocupe toda la pantalla en lugar de estar centrada */
         max-width: 100%;
         height: 100vh;
+        height: 100dvh;
         border-radius: 0;
         box-shadow: none;
     }
 }
 
+/* Móvil y tablet vertical: una sola columna, lista o conversación.
+   js/chat.js agrega .chat-open al contenedor al abrir un chat (mismo breakpoint). */
 @media (max-width: 768px) {
-    /* La barra lateral ocupa todo el ancho */
     .sidebar {
         width: 100%;
-        min-width: 100%;
-        height: 100vh;
-        /* Usa posición absoluta/fija para superponerse al chat-window en móvil */
-        position: absolute; 
-        z-index: 50;
+        min-width: 0;
     }
 
-    /* La ventana de chat se oculta por defecto en el móvil */
     .chat-window {
         display: none;
         width: 100%;
-        /* Ocupa todo el espacio de la vista */
-        position: absolute; 
-        z-index: 60;
     }
 
-    /* Clase que debe agregarse con JS cuando se selecciona un contacto en móvil */
-    .chat-window.active {
-        display: flex; 
+    .app-container.chat-open .sidebar {
+        display: none;
+    }
+
+    .app-container.chat-open .chat-window {
+        display: flex;
+    }
+
+    .back-button {
+        display: inline-flex;
+    }
+
+    .sidebar-header,
+    .chat-header {
+        padding: 8px 10px;
+    }
+
+    .chat-footer {
+        padding: 8px 10px;
+    }
+
+    .message {
+        max-width: 85%;
+    }
+
+    .chat-list {
+        padding-right: 0;
+    }
+}
+
+/* Pantallas táctiles: no hay hover, así que las acciones de cada chat se muestran siempre */
+@media (hover: none) {
+    .action-icons {
+        opacity: 1;
+    }
+
+    .action-icons i {
+        padding: 10px;
+        margin-left: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
     }
 }
 

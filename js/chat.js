@@ -14,6 +14,10 @@ const clearButton = document.getElementById('clear-chat-button');
 const headerName = document.getElementById('chat-header-name');
 const headerStatus = document.getElementById('chat-header-status');
 const headerPic = document.getElementById('chat-header-pic');
+const appContainer = document.querySelector('.app-container');
+const backButton = document.getElementById('back-button');
+// En móvil se ve una sola columna: la lista o la conversación (debe coincidir con style.css)
+const mobile = window.matchMedia('(max-width: 768px)');
 
 const same = (a, b) => a && b && a.toLowerCase() === b.toLowerCase();
 const chatPath = username => `/api/chats/${encodeURIComponent(username)}`;
@@ -123,6 +127,7 @@ async function loadMessages(username) {
 async function openChat(username) {
     const chat = findChat(username);
     state.active = chat ? chat.username : username;
+    showConversation(true);
     renderHeader();
     renderChatList();
     chatBody.replaceChildren();
@@ -132,10 +137,22 @@ async function openChat(username) {
     } catch (error) {
         showToast(error.message);
     }
-    inputField.focus();
+    if (!mobile.matches) inputField.focus(); // en móvil no se abre el teclado sin que la persona lo pida
+}
+
+function showConversation(open) {
+    appContainer.classList.toggle('chat-open', open);
+    // en móvil, el botón «atrás» del teléfono vuelve a la lista en vez de salir de la app
+    if (open && mobile.matches && !(history.state && history.state.chat)) history.pushState({ chat: true }, '');
+}
+
+function goBackToList() {
+    if (history.state && history.state.chat) history.back(); // el evento popstate cierra el chat
+    else closeChat();
 }
 
 function closeChat() {
+    showConversation(false);
     state.active = null;
     renderHeader();
     renderChatList();
@@ -229,6 +246,10 @@ export function setupChat() {
 
     sendButton.addEventListener('click', sendMessage);
     clearButton.addEventListener('click', clearActiveChat);
+    backButton.addEventListener('click', goBackToList);
+    window.addEventListener('popstate', () => {
+        if (!(history.state && history.state.chat) && state.active) closeChat();
+    });
     inputField.addEventListener('keydown', event => {
         if (event.key === 'Enter') {
             event.preventDefault();
