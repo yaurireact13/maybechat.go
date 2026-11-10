@@ -65,11 +65,23 @@ class CotizacionController extends Controller
             'items' => ['required', 'json'],
         ], ['vencimiento.after_or_equal' => 'El vencimiento no puede ser una fecha pasada.']);
 
-        $items = collect(json_decode($datos['items'], true))
-            ->filter(fn ($i) => (float) ($i['cantidad'] ?? 0) > 0);
+        $items = collect(json_decode($datos['items'], true) ?: [])
+            ->filter(fn ($i) => is_array($i) && isset($i['id']) && (float) ($i['cantidad'] ?? 0) > 0)
+            ->map(fn ($i) => ['id' => (int) $i['id'], 'cantidad' => (float) $i['cantidad'], 'precio' => (float) ($i['precio'] ?? 0)])
+            ->values();
 
         if ($items->isEmpty()) {
             return back()->withInput()->with('error', 'Agrega al menos un producto.');
+        }
+
+        if ($items->contains(fn ($i) => $i['precio'] < 0)) {
+            return back()->withInput()->with('error', 'Los precios no pueden ser negativos.');
+        }
+
+        // Todos los productos deben pertenecer a esta empresa (el scope global filtra por empresa_id).
+        $validos = Producto::whereIn('id', $items->pluck('id')->unique())->count();
+        if ($validos !== $items->pluck('id')->unique()->count()) {
+            return back()->withInput()->with('error', 'Uno o más productos no existen en tu catálogo.');
         }
 
         $cotizacion = DB::transaction(function () use ($datos, $items) {
@@ -81,11 +93,11 @@ class CotizacionController extends Controller
                 ->count();
 
             $cotizacion = Cotizacion::create([
-                'cliente_id' => $datos['cliente_id'] ?: null,
+                'cliente_id' => ($datos['cliente_id'] ?? null) ?: null,
                 'user_id' => auth()->id(),
                 'numero' => 'COT-' . str_pad($ultimo + 1, 6, '0', STR_PAD_LEFT),
                 'fecha' => today(),
-                'vencimiento' => $datos['vencimiento'] ?: today()->addDays(7),
+                'vencimiento' => ($datos['vencimiento'] ?? null) ?: today()->addDays(7),
                 'total' => round($items->sum(fn ($i) => $i['cantidad'] * $i['precio']), 2),
                 'estado' => 'vigente',
             ]);

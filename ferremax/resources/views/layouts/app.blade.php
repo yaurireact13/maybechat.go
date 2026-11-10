@@ -6,24 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/ia.css') }}?v=1">
     <title>@yield('titulo', 'Panel') — {{ config('app.name') }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ @filemtime(public_path('css/app.css')) }}">
+    <script src="{{ asset('js/vendor/chart.umd.min.js') }}"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        navy: { DEFAULT: '#16344F', dark: '#0F2538', light: '#1E4366' },
-                        teal: { brand: '#2A9D8F', dark: '#21867A' },
-                        lime: { brand: '#A8D582' },
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
@@ -170,7 +156,7 @@
     <div id="overlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
     <!-- ===== Contenido ===== -->
-    <div class="flex-1 lg:ml-64 flex flex-col min-h-screen">
+    <div class="flex-1 min-w-0 lg:ml-64 flex flex-col min-h-screen">
         <!-- Topbar -->
         <header class="h-16 bg-white border-b border-slate-200 flex items-center gap-2 sm:gap-4 px-3 sm:px-6 sticky top-0 z-20">
             <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-slate-100">

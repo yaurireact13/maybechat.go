@@ -30,6 +30,19 @@ class AuthController extends Controller
         $credentials['activo'] = true;
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $user = Auth::user();
+
+            // Una ferretería suspendida no puede entrar aunque el usuario siga activo.
+            if ($user->empresa_id && optional($user->empresa)->activo === false) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()
+                    ->withInput($request->only('email'))
+                    ->withErrors(['email' => 'El acceso de tu ferretería está suspendido. Comunícate con soporte.']);
+            }
+
             $request->session()->regenerate();
 
             if (Auth::user()->esSuperAdmin()) {

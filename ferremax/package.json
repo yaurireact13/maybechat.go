@@ -1,0 +1,15 @@
+{
+  "name": "ferremax-assets",
+  "private": true,
+  "description": "Compila los estilos (Tailwind) y copia Chart.js a public/ para no depender de CDNs en producción.",
+  "scripts": {
+    "build:css": "tailwindcss -i resources/css/app.css -o public/css/app.css --minify",
+    "build:js": "node -e \"require('fs').mkdirSync('public/js/vendor',{recursive:true});require('fs').copyFileSync('node_modules/chart.js/dist/chart.umd.js','public/js/vendor/chart.umd.min.js')\"",
+    "build": "npm run build:css && npm run build:js",
+    "watch": "tailwindcss -i resources/css/app.css -o public/css/app.css --watch"
+  },
+  "devDependencies": {
+    "chart.js": "4.4.1",
+    "tailwindcss": "3.4.17"
+  }
+}

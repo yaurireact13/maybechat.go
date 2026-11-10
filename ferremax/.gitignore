@@ -9,3 +9,5 @@
 !/storage/framework/**/.gitkeep
 /bootstrap/cache/*.php
 .phpunit.result.cache
+/node_modules
+/public/hot

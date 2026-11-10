@@ -13,7 +13,8 @@ return [
     'cookie' => 'ferremax_session',
     'path' => '/',
     'domain' => null,
-    'secure' => false,
+    // En producción (HTTPS) la cookie solo viaja cifrada. Ajustable con SESSION_SECURE_COOKIE.
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
     'http_only' => true,
     'same_site' => 'lax',
     'partitioned' => false,

@@ -39,3 +39,8 @@ Pruebas: `npm test` (en la raíz o en `miServidor`).
   del servidor ni la base de datos.
 - Render sirve HTTPS por ti. Si lo alojas en otro sitio, ponlo detrás de HTTPS (los tokens viajan en cabeceras).
 - Copia de seguridad: guarda periódicamente el archivo `maybechat.db`.
+
+## FerreMax SaaS (carpeta `ferremax/`)
+
+Este repositorio también contiene **FerreMax**, el sistema de gestión multi-empresa para ferreterías
+(Laravel 11 + MySQL). Instalación, pruebas y despliegue: ver [`ferremax/README.md`](ferremax/README.md).

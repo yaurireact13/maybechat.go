@@ -4,23 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión — {{ config('app.name') }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ @filemtime(public_path('css/app.css')) }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        navy: { DEFAULT: '#16344F', dark: '#0F2538', light: '#1E4366' },
-                        teal: { brand: '#2A9D8F', dark: '#21867A' },
-                        lime: { brand: '#A8D582' },
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 <body class="font-sans bg-navy-dark min-h-screen flex items-center justify-center p-4"
       style="background-image: radial-gradient(circle at 20% 20%, #1E4366 0%, #0F2538 60%);">

@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo('/dashboard');
+        // Revalida en cada petición que el usuario y su empresa sigan activos.
+        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureCuentaActiva::class);
+
         $middleware->alias([
             'superadmin' => \App\Http\Middleware\EnsureSuperAdmin::class,
             'tenant' => \App\Http\Middleware\EnsureTenant::class,

@@ -1,0 +1,56 @@
+name: FerreMax (Laravel)
+
+on:
+  push:
+    paths: ['ferremax/**', '.github/workflows/ferremax.yml']
+  pull_request:
+    paths: ['ferremax/**', '.github/workflows/ferremax.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ferremax
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: saas_ferreteria_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_mysql, intl, zip
+          coverage: none
+
+      - name: Instalar dependencias PHP
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Compilar estilos y verificar que public/ está al día
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          git diff --exit-code -- public/css/app.css public/js/vendor || (echo "::error::Ejecuta 'npm run build' y sube public/css/app.css" && exit 1)
+
+      - name: Pruebas
+        run: php vendor/bin/phpunit

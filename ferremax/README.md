@@ -114,7 +114,8 @@ Abrir una terminal en `C:\SAAS\saas_ferreteria` y ejecutar:
 # 1. Instalar dependencias
 composer install
 
-# 2. Generar la clave de la aplicación
+# 2. Crear el .env y generar la clave de la aplicación
+copy .env.example .env
 php artisan key:generate
 
 # 3. Crear la base de datos
@@ -124,11 +125,38 @@ mysql -u root -e "CREATE DATABASE IF NOT EXISTS saas_ferreteria CHARACTER SET ut
 # 4. Crear tablas y datos de demostración
 php artisan migrate --seed
 
-# 5. Iniciar el servidor
-php artisan serve
+# 5. (Opcional) Más datos para las gráficas del Dashboard
+php artisan dashboard:demo
+
+# 6. Iniciar el servidor
+php artisan serve --port=8087
 ```
 
-Abrir **http://localhost:8000**
+Abrir **http://127.0.0.1:8087**
+
+### Estilos (Tailwind) y Chart.js — sin CDN
+
+Los estilos ya vienen **compilados** en `public/css/app.css` y Chart.js en `public/js/vendor/`, por lo que
+el sistema funciona sin Node.js y sin depender de CDNs externos. Solo si cambias clases en las vistas Blade
+debes recompilar (requiere Node 18+):
+
+```bash
+npm install
+npm run build      # o "npm run watch" mientras desarrollas
+```
+
+## Pruebas automatizadas
+
+Las pruebas usan una base **separada** (`saas_ferreteria_test`), nunca la real:
+
+```bash
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS saas_ferreteria_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+php vendor/bin/phpunit
+```
+
+Cubren: todas las pantallas por rol (admin, vendedor, super admin), venta en POS con stock y kardex,
+ventas a crédito, aislamiento entre ferreterías, bloqueo de empresas suspendidas y límite de intentos de login.
+GitHub Actions las ejecuta en cada push (`.github/workflows/ferremax.yml`).
 
 ## Credenciales de demostración
 
@@ -150,6 +178,22 @@ La empresa demo *"Ferretería El Tornillo Feliz"* incluye 15 productos, 8 catego
 `empresas`, `users`, `categorias`, `marcas`, `unidades`, `productos`, `clientes`, `proveedores`, `ventas`, `venta_detalles`, `compras`, `compra_detalles`, `cotizaciones`, `movimientos_inventario`, `cajas`, `pagos`.
 
 > Las tablas `ventas` y `compras` incluyen `saldo` y `fecha_vencimiento`; `compras` añade `a_credito`. La tabla `pagos` registra cada abono (cobro a cliente o pago a proveedor) con método, referencia y nota.
+
+## Seguridad y correcciones (noviembre 2026)
+
+| Cambio | Detalle |
+|---|---|
+| Clientes, Proveedores y Usuarios daban **error 500** | `@json(...)` dentro de `onclick` rompía el compilador de Blade. Ahora los datos van en un atributo `data-registro` escapado. |
+| **Precio manipulable en el POS** | El servidor tomaba el precio que enviaba el navegador. Ahora el precio se lee siempre de la base de datos. |
+| Stock con productos repetidos | Un carrito con el mismo producto dos veces podía saltarse la validación de stock. Ahora se agrupan antes de validar. |
+| Error con petición sin `cliente_id` | El POS fallaba con "Undefined array key". Corregido. |
+| Ferretería suspendida seguía operando | Las sesiones ya abiertas no se cerraban. Nuevo middleware `EnsureCuentaActiva` que revalida usuario y empresa en cada petición; el login también rechaza empresas suspendidas. |
+| Fuerza bruta en el login | Límite de 10 intentos/minuto en `/login` y 5/minuto en `/registro`. |
+| Referencias entre ferreterías | Productos (categoría/marca/unidad) y cotizaciones solo aceptan registros de la propia empresa. |
+| Cookie de sesión | `secure` se activa automáticamente en producción (`SESSION_SECURE_COOKIE`). |
+| Comando `dashboard:demo` | No existía; ahora carga datos de demostración (bloqueado en producción salvo `--force`). |
+| Diseño responsive | En móvil las tablas desbordaban toda la página (faltaba `min-w-0`). Verificado sin desbordes a 320 y 375 px. |
+| Dependencia de CDN | Tailwind (CDN "play", no apto para producción) y Chart.js ahora se sirven desde `public/`. |
 
 ## Próximas fases sugeridas
 

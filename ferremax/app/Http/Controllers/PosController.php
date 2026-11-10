@@ -48,7 +48,12 @@ class PosController extends Controller
             'items' => ['required', 'json'],
         ]);
 
-        $items = collect(json_decode($datos['items'], true));
+        // Normaliza el carrito: agrupa productos repetidos y descarta entradas mal formadas.
+        $items = collect(json_decode($datos['items'], true) ?: [])
+            ->filter(fn ($i) => is_array($i) && isset($i['id'], $i['cantidad']) && is_numeric($i['cantidad']))
+            ->groupBy(fn ($i) => (int) $i['id'])
+            ->map(fn ($grupo, $id) => ['id' => (int) $id, 'cantidad' => (float) $grupo->sum('cantidad')])
+            ->values();
 
         if ($items->isEmpty()) {
             return back()->with('error', 'El carrito está vacío.');
@@ -84,6 +89,10 @@ class PosController extends Controller
                     }
                 }
 
+                // El precio SIEMPRE sale de la base de datos, nunca del navegador:
+                // así nadie puede alterar el importe manipulando la petición.
+                $items = $items->map(fn ($i) => $i + ['precio' => (float) $productos->get($i['id'])->precio_venta]);
+
                 // Correlativo por empresa
                 $ultimo = Venta::withoutGlobalScope('empresa')
                     ->where('empresa_id', $empresaId)
@@ -102,7 +111,7 @@ class PosController extends Controller
                     : null;
 
                 $venta = Venta::create([
-                    'cliente_id' => $datos['cliente_id'] ?: null,
+                    'cliente_id' => ($datos['cliente_id'] ?? null) ?: null,
                     'user_id' => auth()->id(),
                     'numero' => $numero,
                     'tipo_comprobante' => $datos['tipo_comprobante'],

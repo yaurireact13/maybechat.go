@@ -11,6 +11,7 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "mockery/mockery": "^1.6",
         "phpunit/phpunit": "^11.0"
     },
     "autoload": {
@@ -20,7 +21,15 @@
             "Database\\Seeders\\": "database/seeders/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "scripts": {
+        "test": [
+            "@php vendor/bin/phpunit"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

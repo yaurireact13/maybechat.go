@@ -43,7 +43,8 @@
             </div>
             <div class="flex gap-2 mt-4 pt-4 border-t border-slate-100">
                 <button type="button"
-                        onclick='abrirModal(@json($u->only(["id","name","email","rol"])))'
+                        data-registro="{{ json_encode($u->only(["id","name","email","rol"])) }}"
+                                        onclick="abrirModal(JSON.parse(this.dataset.registro))"
                         class="flex-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg transition">
                     Editar
                 </button>
