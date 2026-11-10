@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * ============================================================================
+ *  PLANTILLA PARA AGREGAR UN NUEVO PAIS  (ej. Colombia / DIAN)
+ * ============================================================================
+ *
+ *  PASOS (sin modificar NINGUN codigo existente del dominio ni de aplicacion):
+ *
+ *   1. Copia este archivo a:
+ *        app/Infrastructure/Providers/Colombia/DianProveedor.php
+ *      y renombra la clase a DianProveedor.
+ *
+ *   2. Implementa la interfaz ProveedorFacturacion traduciendo el modelo de
+ *      dominio al formato local (Colombia: UBL 2.1 + CUFE, validacion previa DIAN).
+ *
+ *   3. Registra el adaptador en config/facturacion.php:
+ *        'CO' => \App\Infrastructure\Providers\Colombia\DianProveedor::class,
+ *
+ *   4. (Opcional) agrega parametros del pais en config('facturacion.pais.CO').
+ *
+ *   Listo. El ERP ya puede facturar en Colombia enviando "pais": "CO".
+ *   El dominio, los casos de uso y el ERP NO se tocan (Principio Abierto/Cerrado).
+ * ============================================================================
+ */
+
+declare(strict_types=1);
+
+namespace App\Infrastructure\Providers\Colombia;
+
+use App\Domain\Facturacion\Enum\Pais;
+use App\Domain\Facturacion\Model\Comprobante;
+use App\Domain\Facturacion\Port\ProveedorFacturacion;
+use App\Domain\Facturacion\Port\Resultado\EstadoRemoto;
+use App\Domain\Facturacion\Port\Resultado\ResultadoEmision;
+
+final class DianProveedor implements ProveedorFacturacion
+{
+    public function pais(): Pais
+    {
+        return Pais::CO;
+    }
+
+    public function emitirFactura(Comprobante $comprobante): ResultadoEmision
+    {
+        // 1) construir UBL 2.1 (DIAN)  2) firmar  3) enviar a DIAN (validacion previa)
+        // 4) leer respuesta y CUFE  5) devolver ResultadoEmision::aceptado($cufe, $xml)
+        throw new \RuntimeException('DianProveedor: pendiente de implementar (Fase 2).');
+    }
+
+    public function emitirNotaCredito(Comprobante $notaCredito): ResultadoEmision
+    {
+        throw new \RuntimeException('DianProveedor: pendiente de implementar.');
+    }
+
+    public function anularComprobante(Comprobante $comprobante, string $motivo): ResultadoEmision
+    {
+        throw new \RuntimeException('DianProveedor: pendiente de implementar.');
+    }
+
+    public function consultarEstado(Comprobante $comprobante): EstadoRemoto
+    {
+        throw new \RuntimeException('DianProveedor: pendiente de implementar.');
+    }
+}

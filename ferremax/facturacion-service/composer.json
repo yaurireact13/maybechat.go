@@ -1,0 +1,38 @@
+{
+    "name": "datsoft/facturacion-service",
+    "type": "project",
+    "description": "Microservicio de facturacion electronica multipais (SUNAT, DIAN, SII, ARCA, SAT) con Clean Architecture + DDD.",
+    "keywords": ["facturacion-electronica", "sunat", "dian", "sii", "cfdi", "microservice", "ddd", "clean-architecture"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^11.0",
+        "ext-soap": "*",
+        "ext-openssl": "*",
+        "ext-dom": "*",
+        "robrichards/xmlseclibs": "^3.1",
+        "league/flysystem-aws-s3-v3": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "mockery/mockery": "^1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
