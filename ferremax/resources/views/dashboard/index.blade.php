@@ -3,7 +3,14 @@
 @section('titulo', 'Dashboard')
 
 @section('contenido')
-@php $moneda = auth()->user()->empresa->moneda ?? 'S/'; @endphp
+@php
+    $moneda = auth()->user()->empresa->moneda ?? 'S/';
+    // Qué bloques ve cada rol (config/permisos.php)
+    $verVentas = auth()->user()->can('ver-ventas');
+    $verFin = auth()->user()->can('finanzas-dashboard');
+    $verCobrar = auth()->user()->can('cuentas-cobrar');
+    $verPagar = auth()->user()->can('cuentas-pagar');
+@endphp
 
 @if (session('bienvenida') || $totalProductos === 0)
     <!-- Bienvenida / primeros pasos -->
@@ -13,26 +20,34 @@
             <h2 class="text-xl sm:text-2xl font-extrabold">¡Bienvenido a FerreMax, {{ auth()->user()->name }}! 👋</h2>
             <p class="text-slate-300 text-sm mt-1 mb-5">Tu ferretería ya está lista. Sigue estos pasos para empezar a vender:</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                @can('configuracion')
                 <a href="{{ route('configuracion.index') }}" class="bg-navy-light hover:bg-teal-brand/20 border border-white/10 rounded-xl p-4 transition group">
                     <p class="text-2xl mb-1">⚙️</p>
                     <p class="text-sm font-bold group-hover:text-lime-brand transition">1. Revisa tu configuración</p>
                     <p class="text-[11px] text-slate-400 mt-0.5">Datos de empresa, moneda e impuesto.</p>
                 </a>
+                @endcan
+                @can('productos')
                 <a href="{{ route('productos.create') }}" class="bg-navy-light hover:bg-teal-brand/20 border border-white/10 rounded-xl p-4 transition group">
                     <p class="text-2xl mb-1">📦</p>
                     <p class="text-sm font-bold group-hover:text-lime-brand transition">2. Registra tus productos</p>
                     <p class="text-[11px] text-slate-400 mt-0.5">Con precios, stock y categorías.</p>
                 </a>
+                @endcan
+                @can('proveedores')
                 <a href="{{ route('proveedores.index') }}" class="bg-navy-light hover:bg-teal-brand/20 border border-white/10 rounded-xl p-4 transition group">
                     <p class="text-2xl mb-1">🚚</p>
                     <p class="text-sm font-bold group-hover:text-lime-brand transition">3. Agrega proveedores</p>
                     <p class="text-[11px] text-slate-400 mt-0.5">Para registrar compras de mercadería.</p>
                 </a>
+                @endcan
+                @can('vender')
                 <a href="{{ route('pos.index') }}" class="bg-navy-light hover:bg-teal-brand/20 border border-white/10 rounded-xl p-4 transition group">
                     <p class="text-2xl mb-1">💰</p>
                     <p class="text-sm font-bold group-hover:text-lime-brand transition">4. ¡Haz tu primera venta!</p>
                     <p class="text-[11px] text-slate-400 mt-0.5">Abre caja y usa el punto de venta.</p>
                 </a>
+                @endcan
             </div>
         </div>
     </div>
@@ -44,15 +59,18 @@
         <h1 class="text-2xl font-extrabold text-navy">Dashboard</h1>
         <p class="text-sm text-slate-500">Resumen de {{ auth()->user()->empresa->nombre ?? 'tu ferretería' }} — {{ now()->locale('es')->isoFormat('dddd D [de] MMMM, YYYY') }}</p>
     </div>
+    @can('vender')
     <a href="{{ route('pos.index') }}"
        class="inline-flex items-center justify-center gap-2 bg-teal-brand hover:bg-teal-dark text-white text-sm font-bold px-5 py-2.5 rounded-lg shadow-lg shadow-teal-brand/30 transition w-full sm:w-fit">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
         Nueva Venta
     </a>
+    @endcan
 </div>
 
 <!-- KPIs -->
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 {{ $verVentas ? 'xl:grid-cols-4' : 'xl:grid-cols-2' }} gap-4 mb-6">
+@if ($verVentas)
     <!-- Ventas de Hoy -->
     <div class="relative overflow-hidden rounded-2xl p-5 shadow-lg shadow-teal-brand/20 bg-gradient-to-br from-teal-brand to-teal-dark text-white">
         <div class="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-white/10"></div>
@@ -83,6 +101,7 @@
         </div>
     </div>
 
+@endif
     <!-- Productos / Clientes -->
     <div class="relative overflow-hidden rounded-2xl p-5 shadow-lg shadow-navy/25 bg-gradient-to-br from-navy to-navy-light text-white">
         <div class="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-teal-brand/25"></div>
@@ -115,7 +134,9 @@
 </div>
 
 <!-- Cuentas por cobrar / pagar -->
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+@if ($verCobrar || $verPagar)
+<div class="grid grid-cols-1 {{ $verCobrar && $verPagar ? 'sm:grid-cols-2' : '' }} gap-4 mb-6">
+    @if ($verCobrar)
     <a href="{{ route('cuentas.cobrar') }}" class="group relative overflow-hidden rounded-2xl p-5 shadow-md bg-gradient-to-br from-teal-brand/10 to-teal-brand/5 border border-teal-brand/20 hover:shadow-lg hover:-translate-y-0.5 transition flex items-center justify-between">
         <div>
             <p class="text-xs font-bold uppercase tracking-wide text-teal-dark/70">Por Cobrar</p>
@@ -128,6 +149,8 @@
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
         </span>
     </a>
+    @endif
+    @if ($verPagar)
     <a href="{{ route('cuentas.pagar') }}" class="group relative overflow-hidden rounded-2xl p-5 shadow-md bg-gradient-to-br from-navy/10 to-navy/5 border border-navy/20 hover:shadow-lg hover:-translate-y-0.5 transition flex items-center justify-between">
         <div>
             <p class="text-xs font-bold uppercase tracking-wide text-navy/70">Por Pagar</p>
@@ -140,14 +163,18 @@
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" /></svg>
         </span>
     </a>
+    @endif
 </div>
+@endif
 
 <!-- ===================== GRÁFICOS ESTADÍSTICOS ===================== -->
 
 <!-- Fila superior: Ingresos vs Egresos + Ventas por categoría -->
+@if ($verFin || $verVentas)
 <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mb-4">
+@if ($verFin)
     <!-- 1) Ingresos vs Egresos (barras agrupadas) -->
-    <div class="xl:col-span-3 relative overflow-hidden rounded-2xl p-5 shadow-md bg-gradient-to-br from-white to-slate-50 border border-slate-200">
+    <div class="{{ $verVentas ? 'xl:col-span-3' : 'xl:col-span-5' }} relative overflow-hidden rounded-2xl p-5 shadow-md bg-gradient-to-br from-white to-slate-50 border border-slate-200">
         <div class="flex items-start justify-between mb-3">
             <div>
                 <h3 class="font-bold text-navy text-sm flex items-center gap-2">
@@ -160,8 +187,10 @@
         <div class="relative w-full h-52 sm:h-64 lg:h-72 xl:h-80"><canvas id="chartIngresosEgresos"></canvas></div>
     </div>
 
+@endif
+@if ($verVentas)
     <!-- 2) Ventas por categoría (polar) -->
-    <div class="xl:col-span-2 relative overflow-hidden rounded-2xl p-5 shadow-md bg-gradient-to-br from-white to-slate-50 border border-slate-200">
+    <div class="{{ $verFin ? 'xl:col-span-2' : 'xl:col-span-5' }} relative overflow-hidden rounded-2xl p-5 shadow-md bg-gradient-to-br from-white to-slate-50 border border-slate-200">
         <div class="flex items-start justify-between mb-3">
             <div>
                 <h3 class="font-bold text-navy text-sm flex items-center gap-2">
@@ -177,12 +206,16 @@
             <div class="h-52 sm:h-64 lg:h-72 xl:h-80 flex items-center justify-center text-sm text-slate-400">Sin ventas este mes.</div>
         @endif
     </div>
+    @endif
 </div>
+@endif
 
 <!-- Fila inferior: Ventas por hora + Estado de cartera -->
+@if ($verFin || $verVentas)
 <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 mb-6">
+@if ($verVentas)
     <!-- 3) Ventas por hora (línea de área) -->
-    <div class="xl:col-span-3 relative overflow-hidden rounded-2xl p-5 shadow-md bg-gradient-to-br from-white to-slate-50 border border-slate-200">
+    <div class="{{ $verFin ? 'xl:col-span-3' : 'xl:col-span-5' }} relative overflow-hidden rounded-2xl p-5 shadow-md bg-gradient-to-br from-white to-slate-50 border border-slate-200">
         <div class="flex items-start justify-between mb-3">
             <div>
                 <h3 class="font-bold text-navy text-sm flex items-center gap-2">
@@ -195,8 +228,10 @@
         <div class="relative w-full h-52 sm:h-64 lg:h-72"><canvas id="chartHoras"></canvas></div>
     </div>
 
+@endif
+@if ($verFin)
     <!-- 4) Estado de cartera (barras apiladas horizontales) -->
-    <div class="xl:col-span-2 relative overflow-hidden rounded-2xl p-5 shadow-md bg-gradient-to-br from-white to-slate-50 border border-slate-200">
+    <div class="{{ $verVentas ? 'xl:col-span-2' : 'xl:col-span-5' }} relative overflow-hidden rounded-2xl p-5 shadow-md bg-gradient-to-br from-white to-slate-50 border border-slate-200">
         <div class="flex items-start justify-between mb-3">
             <div>
                 <h3 class="font-bold text-navy text-sm flex items-center gap-2">
@@ -211,13 +246,17 @@
             <span class="flex items-center gap-1.5 text-slate-500"><span class="w-3 h-3 rounded-sm bg-red-500"></span>Vencido</span>
         </div>
     </div>
+    @endif
 </div>
+@endif
 
 <!-- Alertas de stock bajo -->
 <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm mb-6">
     <div class="flex items-center justify-between mb-1">
         <h3 class="font-bold text-navy text-sm">Alertas de stock bajo</h3>
+        @can('inventario')
         <a href="{{ route('inventario.index') }}" class="text-xs font-semibold text-teal-brand hover:text-teal-dark">Ver todo →</a>
+        @endcan
     </div>
     <p class="text-xs text-slate-400 mb-4">Stock actual vs. mínimo</p>
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
@@ -237,6 +276,7 @@
 
 <!-- Últimas ventas + movimientos -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    @if ($verVentas)
     <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="flex items-center justify-between px-5 pt-5 pb-3">
             <h3 class="font-bold text-navy text-sm">Últimas ventas</h3>
@@ -274,8 +314,9 @@
             </table>
         </div>
     </div>
+    @endif
 
-    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+    <div class="{{ $verVentas ? '' : 'lg:col-span-3' }} bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
         <h3 class="font-bold text-navy text-sm mb-4">Movimientos recientes</h3>
         <div class="space-y-3">
             @forelse ($ultimosMovimientos as $m)
@@ -346,6 +387,7 @@
     };
 
     // ============ 1) Ingresos vs Egresos — barras agrupadas ============
+    @if ($verFin)
     _charts.push(new Chart(document.getElementById('chartIngresosEgresos'), {
         type: 'bar',
         data: {
@@ -378,9 +420,11 @@
             }
         }
     }));
+    @endif
 
     // ============ 2) Ventas por categoría — polar area ============
     @if ($ventasPorCategoria->count())
+    @if ($verVentas)
     _charts.push(new Chart(document.getElementById('chartCategoria'), {
         type: 'polarArea',
         data: {
@@ -405,8 +449,10 @@
         }
     }));
     @endif
+    @endif
 
     // ============ 3) Ventas por hora del día — línea de área ============
+    @if ($verVentas)
     _charts.push(new Chart(document.getElementById('chartHoras'), {
         type: 'line',
         data: {
@@ -439,9 +485,11 @@
             }
         }
     }));
+    @endif
 
     // ============ 4) Estado de cartera — barras apiladas horizontales ============
     @php $c = $cartera; @endphp
+    @if ($verFin)
     _charts.push(new Chart(document.getElementById('chartCartera'), {
         type: 'bar',
         data: {
@@ -474,6 +522,7 @@
             }
         }
     }));
+    @endif
 
     // Redibujar al cambiar el tamaño de la ventana (debounced)
     let _rt;

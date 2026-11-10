@@ -22,7 +22,7 @@
                 <p class="text-sm text-slate-500">{{ $compra->fecha->locale('es')->isoFormat('dddd D [de] MMMM YYYY') }}</p>
             </div>
         </div>
-        @if ($compra->estado === 'recibida')
+        @if ($compra->estado === 'recibida' && auth()->user()->can('anular-compras'))
             <form method="POST" action="{{ route('compras.anular', $compra) }}"
                   onsubmit="return confirm('¿Anular la compra {{ $compra->numero }}? El stock ingresado será revertido.')">
                 @csrf @method('PATCH')

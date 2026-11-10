@@ -37,7 +37,7 @@ class UsuarioController extends Controller
         $datos = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'rol' => ['required', 'in:admin,vendedor,almacenero,cajero'],
+            'rol' => ['required', Rule::in(array_keys(config('permisos.roles')))],
             'password' => ['required', 'string', 'min:6'],
         ], [
             'email.unique' => 'Este correo ya está registrado.',
@@ -63,7 +63,7 @@ class UsuarioController extends Controller
         $datos = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($usuario->id)],
-            'rol' => ['required', 'in:admin,vendedor,almacenero,cajero'],
+            'rol' => ['required', Rule::in(array_keys(config('permisos.roles')))],
             'password' => ['nullable', 'string', 'min:6'],
         ], [
             'email.unique' => 'Este correo ya está registrado.',

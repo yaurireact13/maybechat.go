@@ -162,10 +162,40 @@ GitHub Actions las ejecuta en cada push (`.github/workflows/ferremax.yml`).
 
 | Rol | Email | Contraseña |
 |---|---|---|
+| Super Admin (plataforma) | `superadmin@ferremax.com` | `super123` |
 | Administrador | `admin@ferremax.com` | `admin123` |
 | Vendedor | `vendedor@ferremax.com` | `vendedor123` |
+| Cajero | `cajero@ferremax.com` | `cajero123` |
+| Almacenero | `almacenero@ferremax.com` | `almacen123` |
+
+> ⚠️ Son contraseñas de demostración: cámbialas antes de publicar el sistema.
 
 La empresa demo *"Ferretería El Tornillo Feliz"* incluye 15 productos, 8 categorías, clientes, proveedores y ~6 meses de ventas para alimentar las gráficas del dashboard.
+
+## Permisos por rol
+
+Cada módulo exige un permiso. La matriz completa vive en **`config/permisos.php`** y es la única fuente de verdad:
+protege las rutas (`can:`), oculta el menú y los botones (`@can`) y se muestra al administrador en **Usuarios y Roles**.
+
+| Módulo | Admin | Vendedor | Cajero | Almacenero |
+|---|:-:|:-:|:-:|:-:|
+| Punto de venta (POS) | ✓ | ✓ | ✓ | |
+| Historial de ventas y recibos | ✓ | ✓ | ✓ | |
+| Anular ventas | ✓ | | | |
+| Cotizaciones | ✓ | ✓ | | |
+| Caja (apertura, cierre, arqueo) | ✓ | | ✓ | |
+| Cuentas por cobrar y cobros | ✓ | | ✓ | |
+| Cuentas por pagar y pagos | ✓ | | | |
+| Clientes | ✓ | ✓ | ✓ | |
+| Productos, catálogos, inventario/kardex | ✓ | | | ✓ |
+| Compras y proveedores | ✓ | | | ✓ |
+| Anular compras | ✓ | | | |
+| Reportes, indicadores financieros del Dashboard | ✓ | | | |
+| Usuarios, configuración, facturación, IA | ✓ | | | |
+
+- El **Dashboard** muestra a cada rol solo sus bloques: el vendedor y el cajero ven sus ventas, pero no ingresos vs egresos ni lo que se debe a proveedores; el almacenero ve stock y movimientos. Los datos de las gráficas ocultas **ni siquiera se envían** al navegador.
+- Para cambiar lo que puede hacer un rol, edita `config/permisos.php` (y luego `php artisan config:clear`). Las pruebas de `tests/Feature/PermisosTest.php` tienen la matriz escrita aparte a propósito: si cambias un permiso, también tienes que actualizarlas, así ningún cambio pasa sin querer.
+- Si alguien entra a una sección sin permiso, ve una página **403 en español** que le indica su rol y le ofrece volver.
 
 ## Arquitectura multi-tenant
 
@@ -198,6 +228,6 @@ La empresa demo *"Ferretería El Tornillo Feliz"* incluye 15 productos, 8 catego
 ## Próximas fases sugeridas
 
 1. **Comprobantes electrónicos** (integración SUNAT u homólogo local).
-2. **Permisos finos por rol** (middleware por módulo según rol).
+2. ~~Permisos finos por rol~~ ✅ Hecho (ver «Permisos por rol»).
 3. **Planes de pago y facturación del SaaS** (suscripciones por empresa).
 4. **Reportes de antigüedad de saldos** (aging 30/60/90 días de la cartera).

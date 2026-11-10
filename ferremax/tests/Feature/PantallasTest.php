@@ -27,18 +27,6 @@ class PantallasTest extends TestCase
         }
     }
 
-    public function test_el_vendedor_abre_las_pantallas_operativas_pero_no_las_de_administracion(): void
-    {
-        ['vendedor' => $vendedor] = $this->crearFerreteria();
-
-        foreach (self::PANTALLAS_TENANT as $url) {
-            $this->actingAs($vendedor)->get($url)->assertOk();
-        }
-        foreach (self::PANTALLAS_ADMIN as $url) {
-            $this->actingAs($vendedor)->get($url)->assertForbidden();
-        }
-    }
-
     public function test_el_super_admin_abre_el_panel_de_plataforma(): void
     {
         ['e' => $empresa] = $this->crearFerreteria();

@@ -11,7 +11,7 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-    /** Crea una ferretería con un administrador, un vendedor, una categoría, un cliente y un producto. */
+    /** Crea una ferretería con un usuario por rol (admin, vendedor, cajero, almacenero), una categoría, un cliente y un producto. */
     protected function crearFerreteria(string $sufijo = 'a', array $empresa = []): array
     {
         $e = Empresa::create(array_merge([
@@ -29,6 +29,15 @@ abstract class TestCase extends BaseTestCase
             'password' => 'secreto123', 'rol' => 'vendedor',
         ]);
 
+        $cajero = User::create([
+            'empresa_id' => $e->id, 'name' => "Cajero {$sufijo}", 'email' => "cajero-{$sufijo}@test.local",
+            'password' => 'secreto123', 'rol' => 'cajero',
+        ]);
+        $almacenero = User::create([
+            'empresa_id' => $e->id, 'name' => "Almacenero {$sufijo}", 'email' => "almacenero-{$sufijo}@test.local",
+            'password' => 'secreto123', 'rol' => 'almacenero',
+        ]);
+
         $categoria = Categoria::create(['empresa_id' => $e->id, 'nombre' => "Herramientas {$sufijo}"]);
         $cliente = Cliente::create(['empresa_id' => $e->id, 'nombre' => "Cliente {$sufijo}", 'tipo_documento' => 'DNI']);
         $producto = Producto::create([
@@ -37,7 +46,7 @@ abstract class TestCase extends BaseTestCase
             'stock' => 10, 'stock_minimo' => 2,
         ]);
 
-        return compact('e', 'admin', 'vendedor', 'categoria', 'cliente', 'producto');
+        return compact('e', 'admin', 'vendedor', 'cajero', 'almacenero', 'categoria', 'cliente', 'producto');
     }
 
     protected function superAdmin(): User

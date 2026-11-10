@@ -54,6 +54,22 @@ class DatabaseSeeder extends Seeder
             'rol' => 'vendedor',
         ]);
 
+        User::create([
+            'empresa_id' => $empresa->id,
+            'name' => 'Lucía Cajera',
+            'email' => 'cajero@ferremax.com',
+            'password' => Hash::make('cajero123'),
+            'rol' => 'cajero',
+        ]);
+
+        User::create([
+            'empresa_id' => $empresa->id,
+            'name' => 'Pedro Almacenero',
+            'email' => 'almacenero@ferremax.com',
+            'password' => Hash::make('almacen123'),
+            'rol' => 'almacenero',
+        ]);
+
         $cats = [];
         foreach (['Herramientas Manuales', 'Herramientas Eléctricas', 'Tornillería y Fijaciones', 'Pinturas y Acabados', 'Electricidad', 'Gasfitería', 'Construcción', 'Seguridad Industrial'] as $c) {
             $cats[$c] = Categoria::create(['empresa_id' => $empresa->id, 'nombre' => $c]);

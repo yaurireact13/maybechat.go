@@ -33,7 +33,7 @@
                             @elseif($u->rol === 'vendedor') bg-teal-brand/10 text-teal-dark
                             @elseif($u->rol === 'almacenero') bg-amber-100 text-amber-700
                             @else bg-slate-100 text-slate-600 @endif">
-                            {{ $u->rol }}
+                            {{ $u->rol_nombre }}
                         </span>
                         <span class="text-[11px] font-bold px-2 py-0.5 rounded-full {{ $u->activo ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600' }}">
                             {{ $u->activo ? 'Activo' : 'Inactivo' }}
@@ -63,16 +63,51 @@
     @endforeach
 </div>
 
-<!-- Roles informativos -->
-<div class="mt-6 bg-white rounded-xl border border-slate-200 p-5">
-    <h3 class="font-bold text-navy text-sm mb-3">Permisos por rol</h3>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-slate-500">
-        <div class="bg-slate-50 rounded-lg p-3"><b class="text-navy block mb-1">Admin</b>Acceso total: usuarios, configuración, reportes y todos los módulos.</div>
-        <div class="bg-slate-50 rounded-lg p-3"><b class="text-teal-dark block mb-1">Vendedor</b>POS, ventas, cotizaciones, clientes y consulta de productos.</div>
-        <div class="bg-slate-50 rounded-lg p-3"><b class="text-amber-600 block mb-1">Almacenero</b>Productos, inventario, kardex, compras y proveedores.</div>
-        <div class="bg-slate-50 rounded-lg p-3"><b class="text-slate-600 block mb-1">Cajero</b>POS, caja (apertura/cierre) y consulta de ventas.</div>
+<!-- Permisos por rol (generado desde config/permisos.php: lo que ves es lo que se aplica) -->
+@php
+    $roles = config('permisos.roles');
+    $permisos = config('permisos.permisos');
+@endphp
+<section class="mt-6 bg-white rounded-xl border border-slate-200 p-5" aria-labelledby="tituloPermisos">
+    <h3 id="tituloPermisos" class="font-bold text-navy text-sm">Permisos por rol</h3>
+    <p class="text-xs text-slate-400 mt-0.5 mb-4">Lo que puede hacer cada usuario según el rol que le asignes.</p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs text-slate-500 mb-4">
+        @foreach ($roles as $clave => $rol)
+            <div class="bg-slate-50 rounded-lg p-3"><b class="text-navy block mb-1">{{ $rol['nombre'] }}</b>{{ $rol['descripcion'] }}</div>
+        @endforeach
     </div>
-</div>
+
+    <div class="overflow-x-auto -mx-5 px-5">
+        <table class="w-full text-xs min-w-[520px]">
+            <thead>
+                <tr class="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-200">
+                    <th scope="col" class="py-2 pr-3 font-bold">Módulo / acción</th>
+                    @foreach ($roles as $clave => $rol)
+                        <th scope="col" class="py-2 px-2 font-bold text-center">{{ $rol['nombre'] }}</th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @foreach ($permisos as $clave => [$etiqueta, $rolesConAcceso])
+                    <tr>
+                        <th scope="row" class="py-2 pr-3 font-semibold text-slate-600 text-left">{{ $etiqueta }}</th>
+                        @foreach ($roles as $rolClave => $rol)
+                            @php $tiene = $rolClave === 'admin' || in_array($rolClave, $rolesConAcceso, true); @endphp
+                            <td class="py-2 px-2 text-center">
+                                @if ($tiene)
+                                    <span class="inline-flex w-5 h-5 items-center justify-center rounded-full bg-teal-brand/15 text-teal-dark font-bold" aria-label="Sí">✓</span>
+                                @else
+                                    <span class="text-slate-300" aria-label="No">—</span>
+                                @endif
+                            </td>
+                        @endforeach
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</section>
 
 <!-- Modal -->
 <div id="modalUsuario" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -96,10 +131,9 @@
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1.5">Rol <span class="text-red-500">*</span></label>
                     <select name="rol" id="f_rol" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-brand outline-none">
-                        <option value="admin">Administrador</option>
-                        <option value="vendedor">Vendedor</option>
-                        <option value="almacenero">Almacenero</option>
-                        <option value="cajero">Cajero</option>
+                        @foreach (config('permisos.roles') as $clave => $rol)
+                            <option value="{{ $clave }}" data-descripcion="{{ $rol['descripcion'] }}">{{ $rol['nombre'] }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div>
@@ -109,6 +143,7 @@
                     <p id="passHint" class="hidden text-[10px] text-slate-400 mt-1">Déjala vacía para no cambiarla.</p>
                 </div>
             </div>
+            <p id="rolDescripcion" class="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2" aria-live="polite"></p>
             <div class="flex gap-3 pt-2">
                 <button type="button" onclick="cerrarModal()"
                         class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 text-slate-600 text-sm font-bold hover:bg-slate-50 transition">Cancelar</button>
@@ -131,6 +166,7 @@
         document.getElementById('f_name').value = u ? u.name : '';
         document.getElementById('f_email').value = u ? u.email : '';
         document.getElementById('f_rol').value = u ? u.rol : 'vendedor';
+        mostrarDescripcionRol();
         const pass = document.getElementById('f_password');
         pass.value = '';
         pass.required = !u;
@@ -139,6 +175,13 @@
         document.getElementById('modalUsuario').classList.remove('hidden');
         document.getElementById('f_name').focus();
     }
+
+    function mostrarDescripcionRol() {
+        const sel = document.getElementById('f_rol');
+        const opt = sel.options[sel.selectedIndex];
+        document.getElementById('rolDescripcion').textContent = opt ? opt.dataset.descripcion : '';
+    }
+    document.getElementById('f_rol').addEventListener('change', mostrarDescripcionRol);
 
     function cerrarModal() { document.getElementById('modalUsuario').classList.add('hidden'); }
     @if ($errors->any()) abrirModal(); @endif

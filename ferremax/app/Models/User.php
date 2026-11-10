@@ -35,4 +35,30 @@ class User extends Authenticatable
     {
         return $this->rol === 'superadmin';
     }
+
+    /**
+     * ¿El rol del usuario incluye este permiso? (ver config/permisos.php)
+     * El administrador de la ferretería tiene todos; el super admin no opera
+     * dentro de una ferretería (para eso usa la impersonación).
+     */
+    public function tienePermiso(string $permiso): bool
+    {
+        if (! $this->empresa_id) {
+            return false;
+        }
+
+        if ($this->esAdmin()) {
+            return true;
+        }
+
+        $roles = config("permisos.permisos.{$permiso}.1");
+
+        return is_array($roles) && in_array($this->rol, $roles, true);
+    }
+
+    /** Nombre legible del rol (Administrador, Vendedor...). */
+    public function getRolNombreAttribute(): string
+    {
+        return config("permisos.roles.{$this->rol}.nombre", ucfirst((string) $this->rol));
+    }
 }
