@@ -2,6 +2,40 @@
 
 Sistema web multi-empresa para ferreterías construido con **Laravel 11 + MySQL + Blade + Tailwind (CDN) + Chart.js**.
 
+## ▶️ Cómo correrlo (Windows + Laragon)
+
+**Necesitas:** [Laragon Full](https://laragon.org/download/) (trae PHP, MySQL y Composer) y [Git](https://git-scm.com/).
+
+1. Abre Laragon y pulsa **Start All** (Apache y MySQL en verde). Verifica en *Menú → PHP* que sea 8.2 o superior.
+2. Abre **Menú → Terminal** y ejecuta, uno por uno:
+
+```bash
+cd C:\laragon\www
+git clone https://github.com/yaurireact13/LederHome.git ferremax
+cd ferremax
+composer install
+copy .env.example .env
+php artisan key:generate
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS saas_ferreteria CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+php artisan migrate --seed
+php artisan serve --port=8087
+```
+
+3. Abre **http://127.0.0.1:8087** y entra con `admin@ferremax.com` / `admin123` (más usuarios en «Credenciales de demostración»).
+
+Para volver a usarlo otro día solo necesitas: Laragon → *Start All*, terminal en la carpeta y `php artisan serve --port=8087`.
+
+**Problemas comunes**
+
+| Mensaje | Solución |
+|---|---|
+| `composer: command not found` | Usa la terminal de Laragon (Menú → Terminal), no la de Windows. |
+| `SQLSTATE[HY000] [2002]` / *Connection refused* | MySQL no está encendido: pulsa *Start All* en Laragon. |
+| `Unknown database 'saas_ferreteria'` | Ejecuta el comando `mysql -u root -e "CREATE DATABASE ..."` del paso 2. |
+| `No application encryption key` | Ejecuta `php artisan key:generate`. |
+| La página sale sin estilos | Verifica que existe `public/css/app.css`; si cambiaste vistas, ejecuta `npm install` y `npm run build`. |
+| `Address already in use` | Usa otro puerto: `php artisan serve --port=8088`. |
+
 ## Estado actual (Fase 1)
 
 | Módulo | Estado |
